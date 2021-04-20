@@ -1,0 +1,23 @@
+{
+  "properties": [
+    {
+      "name": "cervidae.jraft.isLocalCluster",
+      "type": "java.lang.Boolean",
+      "description": "Description for cervidae.jraft.isLocalCluster."
+    },
+    {
+      "name": "cervidae.jraft.clusterSize",
+      "type": "java.lang.Integer",
+      "description": "Description for cervidae.jraft.local.clusterSize."
+    },
+    {
+      "name": "cervidae.jraft.clusteredId",
+      "type": "java.lang.Integer",
+      "description": "Description for cervidae.jraft.clustered.clusterSize."
+    },
+    {
+      "name": "cervidae.jraft.clusteredIPs",
+      "type": "java.lang.String",
+      "description": "Description for cervidae.jraft.clustered.id."
+    }
+  ] }
