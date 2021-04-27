@@ -1,5 +1,6 @@
 package com.cervidae.jraft.restful;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import java.io.Serializable;
  * @author AaronDu
  */
 @Data
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class Response<T> implements Serializable {
 
@@ -23,24 +25,27 @@ public class Response<T> implements Serializable {
      */
     private int success;
 
-    private Integer code = null;
+    /**
+     * error code
+     */
+    private Integer errorCode = null;
 
     /**
      * error message
      */
-    private String message = null;
+    private String errorMessage = null;
 
-    private T payload;
+    private T payload = null;
 
-    private Response(T payload, int success, String code) {
+    private Response(T payload, int success, String errorCode) {
         this.payload = payload;
         this.success = success;
-        if (code != null) {
+        if (errorCode != null) {
             try {
-                this.code = Integer.parseInt(code);
+                this.errorCode = Integer.parseInt(errorCode);
             } catch (NumberFormatException e) {
-                this.message = code;
-                this.code = 1002;
+                this.errorMessage = errorCode;
+                this.errorCode = 1002;
             }
         }
         this.timeStamp = System.currentTimeMillis();

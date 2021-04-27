@@ -1,18 +1,22 @@
 package com.cervidae.jraft.node;
 
-import com.cervidae.jraft.async.AsyncService;
+import lombok.Data;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 @Configuration
 @Log4j2
+@Data
 @ConfigurationProperties(prefix="cervidae.jraft")
-public class RaftConfiguration {
+public class RaftConfiguration implements ApplicationContextAware {
 
     private Boolean isLocalCluster;
 
@@ -23,23 +27,31 @@ public class RaftConfiguration {
     @Value("#{'${cervidae.jraft.clusteredIPs}'.split(',')}")
     private String[] clusteredIPs;
 
-    private final AsyncService asyncService;
+    private ApplicationContext applicationContext;
 
-    private final StateMachine stateMachine;
+    private RaftContext raftContext;
 
+    @Override
     @Autowired
-    public RaftConfiguration(AsyncService asyncService, StateMachine stateMachine) {
-        this.asyncService = asyncService;
-        this.stateMachine = stateMachine;
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 
     @Bean
     @Primary
     public RaftContext createRaftContext() {
-        if (isLocalCluster) {
-            return new LocalRaftContext(asyncService, clusterSize, stateMachine);
-        } else {
-            return new ClusteredRaftContext(asyncService, clusterSize, clusteredId, clusteredIPs, stateMachine);
+        if (raftContext == null) {
+            if (isLocalCluster) {
+                 raftContext = applicationContext.getBean(LocalRaftContext.class);
+            } else {
+                 raftContext = applicationContext.getBean(ClusteredRaftContext.class);
+            }
         }
+        if (!raftContext.isRunning()) {
+            raftContext.start();
+        }
+        return raftContext;
     }
+
+
 }

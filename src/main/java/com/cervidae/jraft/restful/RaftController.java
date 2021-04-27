@@ -10,17 +10,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("raft")
 public class RaftController {
 
-    final RaftContext context;
+    private final RaftContext context;
 
     @Autowired
     public RaftController(RaftContext context) {
         this.context = context;
     }
 
+    // example: GET localhost:8080/raft/shutdown
     @GetMapping(value = "shutdown")
     public Response<?> shutdown() {
         context.shutdown();
-        return Response.success("Hello world!");
+        return Response.success(context);
     }
-
 }

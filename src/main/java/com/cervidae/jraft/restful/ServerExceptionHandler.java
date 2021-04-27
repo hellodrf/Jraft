@@ -1,25 +1,21 @@
 package com.cervidae.jraft.restful;
 
-import com.cervidae.jraft.restful.Response;
-import lombok.SneakyThrows;
-import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
-import org.springframework.lang.NonNull;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
-
-import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
 /**
  * @author AaronDu
  */
 @RestControllerAdvice
-public class ServerExceptionHandler implements AsyncUncaughtExceptionHandler {
+public class ServerExceptionHandler {
 
-    /* AOP exception handlers */
+    /* AOP exception handlers
+    /* these handlers will only intercept exceptions thrown in @RestController.
+    /* instead of crashing the application, an error message will be returned. */
 
     /**
      * All Other Exceptions: return "Internal Error"
@@ -32,7 +28,7 @@ public class ServerExceptionHandler implements AsyncUncaughtExceptionHandler {
         return Response.fail("1002", e.getMessage());
     }
 
-    @ExceptionHandler({HttpRequestMethodNotSupportedException.class})
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public Response<?> UnauthenticatedExceptionHandler(Exception e) {
         return Response.fail("3003");
     }
@@ -48,8 +44,7 @@ public class ServerExceptionHandler implements AsyncUncaughtExceptionHandler {
     }
 
     /**
-     * UnsatisfiedServletRequestParameterException: thrown in case of "incorrect (number/type)"
-     * arguments provided by the request
+     * UnsatisfiedServletRequestParameterException: incorrect (number/type) arguments were provided by the request
      * @param e Exception instance thrown
      * @return fail response
      */
@@ -68,9 +63,4 @@ public class ServerExceptionHandler implements AsyncUncaughtExceptionHandler {
         return Response.fail("1404");
     }
 
-    @SneakyThrows
-    @Override
-    public void handleUncaughtException(Throwable throwable, @NonNull Method method, @NonNull Object... objects) {
-        throw throwable;
-    }
 }

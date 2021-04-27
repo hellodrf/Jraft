@@ -1,22 +1,22 @@
 package com.cervidae.jraft.node;
 
+import com.cervidae.jraft.async.ArgRunnable;
 import com.cervidae.jraft.async.AsyncService;
 import com.cervidae.jraft.msg.Message;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.Callable;
 
 @Log4j2
 @Data
+@Service
+@Lazy
 public class ClusteredRaftContext implements RaftContext {
 
-    int count;
+    int clusterSize;
 
     int id;
 
@@ -28,28 +28,35 @@ public class ClusteredRaftContext implements RaftContext {
 
     final AsyncService asyncService;
 
-    final StateMachine stateMachine;
-
-    public ClusteredRaftContext(AsyncService asyncService, int count, int id, String[] ips, StateMachine stateMachine) {
+    public ClusteredRaftContext(AsyncService asyncService, RaftConfiguration config) {
         ClusteredRaftContext.log.info("ClusteredRaftContext created and starting");
-        this.id = id;
-        this.nodeIPs = ips;
-        this.count = count;
-        this.node = new RaftNode(id, this);
-        this.running = true;
-        this.node.start();
+        this.id = config.getClusteredId();
         this.asyncService = asyncService;
-        this.stateMachine = stateMachine;
+        this.nodeIPs = config.getClusteredIPs();
+        this.clusterSize = config.getClusterSize();
+        this.running = false;
+        this.node = config.getApplicationContext().getBean(RaftNode.class);
     }
 
     @Override
-    public int addEntry(LogEntry entry) {
+    public int newEntry(LogEntry entry) {
         return 0;
     }
 
     @Override
-    public boolean shutdown() {
-        return false;
+    public void start() {
+        this.running = true;
+        this.node.start();
+    }
+
+    @Override
+    public void shutdown() {
+
+    }
+
+    @Override
+    public int getMyID(RaftNode node) {
+        return 0;
     }
 
     @Override
@@ -58,17 +65,13 @@ public class ClusteredRaftContext implements RaftContext {
     }
 
     @Override
-    public Message[] blockingBroadcast(Message message) {
-        return null;
+    public void blockingBroadcast(Message message, ArgRunnable<Message> callback) {
+
     }
 
     @Override
-    public Message[] asyncBroadcast(Message message) {
-        return null;
+    public void asyncBroadcast(Message message, ArgRunnable<Message> callback) {
+
     }
 
-    @Override
-    public boolean apply(LogEntry entry) {
-        return stateMachine.apply(entry);
-    }
 }

@@ -1,5 +1,6 @@
-package com.cervidae.jraft.node;
+package com.cervidae.jraft.statemachine;
 
+import com.cervidae.jraft.node.LogEntry;
 import lombok.Data;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -10,16 +11,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 @Service
 @Scope("prototype")
-public class KVDatabase implements StateMachine {
+public class ConcurrentHashMapKVService implements StateMachine {
 
-    Map<String, String> storage;
+    Map<String, Integer> storage;
 
-    public KVDatabase() {
+    public ConcurrentHashMapKVService() {
         this.storage = new ConcurrentHashMap<>();
     }
 
-    @Override
     public boolean apply(LogEntry entry) {
-        return false;
+        return true;
     }
 }

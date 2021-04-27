@@ -1,19 +1,24 @@
 package com.cervidae.jraft.node;
 
+import com.cervidae.jraft.async.ArgRunnable;
 import com.cervidae.jraft.msg.Message;
 
 public interface RaftContext {
 
-    int addEntry(LogEntry entry);
+    void start();
 
-    boolean shutdown();
+    void shutdown();
+
+    int getMyID(RaftNode node);
+
+    int newEntry(LogEntry entry);
+
+    boolean isRunning();
 
     Message sendMessage(int target, Message message);
 
-    Message[] blockingBroadcast(Message message);
+    void blockingBroadcast(Message message, ArgRunnable<Message> callback);
 
-    Message[] asyncBroadcast(Message message);
-
-    boolean apply(LogEntry entry);
+    void asyncBroadcast(Message message, ArgRunnable<Message> callback);
 
 }
