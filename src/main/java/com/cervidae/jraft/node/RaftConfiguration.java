@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import java.util.concurrent.TimeUnit;
+
 @Configuration
 @Log4j2
 @Data
@@ -23,6 +25,12 @@ public class RaftConfiguration implements ApplicationContextAware {
     private int clusterSize;
 
     private int clusteredId;
+
+    static final TimeUnit GLOBAL_TIMEUNIT = TimeUnit.MILLISECONDS;
+
+    static final long MAX_ELECTION_DELAY = 550L;
+
+    static final long MIN_ELECTION_DELAY = 650L;
 
     @Value("#{'${cervidae.jraft.clusteredIPs}'.split(',')}")
     private String[] clusteredIPs;
