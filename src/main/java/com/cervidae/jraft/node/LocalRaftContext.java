@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeoutException;
 
 @Log4j2
 @Data
@@ -70,8 +71,10 @@ public class LocalRaftContext implements RaftContext {
     }
 
     @Override
-    public Message sendMessage(int target, Message message) {
-        return nodes.get(target).dispatchRequest(message);
+    public Message sendMessage(int target, Message message) throws TimeoutException {
+        var node = nodes.get(target);
+        if (node.isDEBUG_DISCONNECT() || node.isKilled()) throw new TimeoutException();
+        return node.dispatchRequest(message);
     }
 
     @Override

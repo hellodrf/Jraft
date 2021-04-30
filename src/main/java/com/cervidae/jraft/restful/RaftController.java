@@ -4,6 +4,7 @@ import com.cervidae.jraft.node.RaftContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -18,9 +19,9 @@ public class RaftController {
     }
 
     // example: GET localhost:8080/raft/shutdown
-    @GetMapping(value = "shutdown")
-    public Response<?> shutdown() {
-        context.shutdown();
-        return Response.success(context);
+    @GetMapping(value = "shutdown", params = {"n"})
+    public Response<?> shutdown(@RequestParam int n) {
+        context.getNodes().get(n).shutdown();
+        return Response.success(context.getNodes().get(n));
     }
 }

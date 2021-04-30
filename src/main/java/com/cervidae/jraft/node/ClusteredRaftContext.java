@@ -8,6 +8,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 
 @Log4j2
@@ -72,6 +73,11 @@ public class ClusteredRaftContext implements RaftContext {
     @Override
     public void asyncBroadcast(Message message, ArgRunnable<Message> callback) {
 
+    }
+
+    @Override
+    public List<RaftNode> getNodes() {
+        return null;
     }
 
 }
