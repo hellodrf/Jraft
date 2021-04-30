@@ -28,9 +28,11 @@ public class RaftConfiguration implements ApplicationContextAware {
 
     static final TimeUnit GLOBAL_TIMEUNIT = TimeUnit.MILLISECONDS;
 
-    static final long MAX_ELECTION_DELAY = 550L;
+    static final long MAX_ELECTION_DELAY = 650L;
 
-    static final long MIN_ELECTION_DELAY = 650L;
+    static final long MIN_ELECTION_DELAY = 550L;
+
+    static final long HEARTBEAT_FREQUENCY = 110L;
 
     @Value("#{'${cervidae.jraft.clusteredIPs}'.split(',')}")
     private String[] clusteredIPs;

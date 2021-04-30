@@ -1,7 +1,11 @@
 package com.cervidae.jraft.msg;
 
+import com.cervidae.jraft.node.LogEntry;
+import com.cervidae.jraft.node.RaftNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -9,4 +13,34 @@ public class AppendEntriesRequest extends Message {
 
     String type = "AppendEntriesRequest";
 
+    int term;
+    int leaderID;
+    int prevLogIndex;
+    int prevLogTerm;
+    int leaderCommit;
+    List<LogEntry> entries;
+
+    public AppendEntriesRequest(int term, int leaderID, int prevLogIndex,
+                                int prevLogTerm, int leaderCommit, List<LogEntry> entries) {
+        this.term = term;
+        this.leaderID = leaderID;
+        this.prevLogIndex = prevLogIndex;
+        this.prevLogTerm = prevLogTerm;
+        this.leaderCommit = leaderCommit;
+        this.entries = entries;
+    }
+
+    public AppendEntriesRequest(RaftNode node, List<LogEntry> entries) {
+        this.term = node.getCurrentTerm().get();
+        this.leaderID = node.getId();
+        if (node.getLogEntries().size()==0) {
+            this.prevLogIndex = -1;
+            this.prevLogTerm = -1;
+        } else {
+            this.prevLogIndex = node.getLogEntries().size()-1;
+            this.prevLogTerm = node.getLogEntries().get(node.getLogEntries().size()-1).getTerm();
+        }
+        this.leaderCommit = node.getLastApplied();
+        this.entries = entries;
+    }
 }

@@ -1,4 +1,4 @@
-package com.cervidae.jraft.comm;
+package com.cervidae.jraft.rpc;
 
 import org.springframework.stereotype.Service;
 

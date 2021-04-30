@@ -9,7 +9,7 @@ public class LogEntry implements Serializable {
 
     public static final long serialVersionUID = 4857814132681042987L;
 
-    long term;
+    int term;
 
     Object command;
 

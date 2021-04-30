@@ -1,4 +1,4 @@
-package com.cervidae.jraft.comm;
+package com.cervidae.jraft.rpc;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
