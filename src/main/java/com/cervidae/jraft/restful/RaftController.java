@@ -18,10 +18,10 @@ public class RaftController {
         this.context = context;
     }
 
-    // example: GET localhost:8080/raft/shutdown
-    @GetMapping(value = "shutdown", params = {"n"})
+    // GET localhost:8080/raft/kill?n=1
+    @GetMapping(value = "kill", params = {"n"})
     public Response<?> shutdown(@RequestParam int n) {
         context.getNodes().get(n).shutdown();
-        return Response.success(context.getNodes().get(n));
+        return Response.success(context);
     }
 }

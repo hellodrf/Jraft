@@ -195,15 +195,15 @@ public class RaftNode implements Serializable {
             }
             getLogger().info("Election triggered by " + reason);
             this.state.transition(State.CANDIDATE, this);
-            this.currentTerm.incrementAndGet();
             this.votedFor = this.id;
-            this.voteTerm = this.currentTerm.get();
+            this.voteTerm = this.currentTerm.incrementAndGet();
             var voteCount = new AtomicInteger(1);
             int threshold = config.getClusterSize() / 2;
             var req = this.logEntries.size() > 0 ?
                     new RequestVoteRequest(this.currentTerm.get(), this.id, logEntries.size() - 1,
                             this.logEntries.get(logEntries.size() - 1).term) :
                     new RequestVoteRequest(this.currentTerm.get(), this.id, -1, -1);
+            var latch = new CountDownLatch(config.getClusterSize()-1);
             for (int i = 0; i < config.getClusterSize(); i++) {
                 if (this.killed || this.state != State.CANDIDATE) {
                     return;
@@ -211,32 +211,50 @@ public class RaftNode implements Serializable {
                 if (i == this.id) continue;
                 int rcv = i;
                 asyncService.go(() -> {
-                    if (this.killed || this.state != State.CANDIDATE) {
-                        return;
-                    }
-                    getLogger().info("Sending RequestVote to " + rcv);
-                    RequestVoteReply reply;
                     try {
-                        reply = (RequestVoteReply) context.sendMessage(rcv, req);
-                    } catch (TimeoutException e) {
-                        e.printStackTrace();
-                        return;
-                    }
-                    if (this.killed || this.state != State.CANDIDATE) {
-                        return;
-                    }
-                    if (reply.isVoteGranted()) {
-                        getLogger().info("Vote received from " + rcv);
-                        incrementAndCheckVoteCount(voteCount, threshold);
-                    } else {
-                        getLogger().info("De-Vote received from " + rcv);
+                        if (this.killed || this.state != State.CANDIDATE) {
+                            return;
+                        }
+                        getLogger().info("Sending RequestVote to " + rcv);
+                        RequestVoteReply reply;
+                        try {
+                            reply = (RequestVoteReply) context.sendMessage(rcv, req);
+                        } catch (TimeoutException e) {
+                            getLogger().warn("RequestVote RPC to N" + rcv + " timed out?");
+                            return;
+                        }
+                        if (this.killed || this.state != State.CANDIDATE) {
+                            return;
+                        }
+                        if (reply.isVoteGranted()) {
+                            getLogger().info("Vote received from " + rcv);
+                            incrementAndCheckVoteCount(voteCount, threshold);
+                        } else {
+                            getLogger().info("De-Vote received from " + rcv);
+                        }
+                    } finally {
+                        latch.countDown();
                     }
                 });
             }
+            if (latch.await(ELECTION_DELAY, RaftConfiguration.GLOBAL_TIMEUNIT)) {
+                if (voteCount.get() > threshold) {
+                    incrementAndCheckVoteCount(voteCount, threshold);
+                } else {
+                    getLogger().info("Election failed, starting a new election");
+                    election("failed election");
+                }
+            } else {
+                if (this.state == State.CANDIDATE) {
+                    getLogger().info("Election latch timeout? starting a new election");
+                    election("failed election");
+                }
+            }
+        } catch (InterruptedException e) {
+            getLogger().info("Election latch interrupted?");
         } finally {
             electionMutex.writeLock().unlock();
         }
-
     }
 
     public void heartbeat() {
@@ -254,7 +272,7 @@ public class RaftNode implements Serializable {
                         //getLogger().info("heartbeat accepted by N" + finalI);
                     }
                 } catch (TimeoutException e) {
-                    getLogger().warn("Heartbeat to N" + finalI + " timed out?");
+                    getLogger().warn("Heartbeat RPC to N" + finalI + " timed out?");
                 }
             });
         }
@@ -333,15 +351,12 @@ public class RaftNode implements Serializable {
         if (this.currentTerm.get() > msg.getTerm()) {
             return reply;
         }
-
         if (this.voteTerm >= msg.getTerm()) {
             return reply;
         }
-
         if (this.logEntries.size() - 1 > msg.getLastLogIndex()) {
             return reply;
         }
-
         reply.setVoteGranted(true);
         this.voteTerm = this.currentTerm.get();
         this.votedFor = msg.getCandidateID();
@@ -363,6 +378,6 @@ public class RaftNode implements Serializable {
 
     public String toString() {
         return "N" + id + "[" + state + "|Term" + currentTerm.get() + "|Vote" + votedFor +
-                "|HBDue" + (ELECTION_DELAY - System.currentTimeMillis() + lastHeartbeat) + "|Dead" + (killed?0:1) +"]";
+                "|HBDue" + (ELECTION_DELAY - System.currentTimeMillis() + lastHeartbeat) + "|D" + (killed?1:0) +"]";
     }
 }
