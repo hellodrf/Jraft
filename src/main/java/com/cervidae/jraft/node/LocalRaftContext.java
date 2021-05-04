@@ -1,6 +1,5 @@
 package com.cervidae.jraft.node;
 
-import com.cervidae.jraft.async.ArgRunnable;
 import com.cervidae.jraft.async.AsyncService;
 import com.cervidae.jraft.msg.Message;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -44,7 +43,7 @@ public class LocalRaftContext implements RaftContext {
      */
     @Override
     public void start() {
-        LocalRaftContext.log.info("LocalRaftContext created, starting cluster nodes: N="+clusterSize);
+        LocalRaftContext.log.info("LocalRaftContext created, starting cluster nodes N="+clusterSize);
         nodes.forEach(RaftNode::start);
         this.running = true;
     }
@@ -75,23 +74,5 @@ public class LocalRaftContext implements RaftContext {
         var node = nodes.get(target);
         if (node.isDEBUG_DISCONNECT() || node.isKilled()) throw new TimeoutException();
         return node.dispatchRequest(message);
-    }
-
-    @Override
-    public void blockingBroadcast(Message message, ArgRunnable<Message> callback) {
-        for (RaftNode node: nodes) {
-            var reply = node.dispatchRequest(message);
-            callback.run(reply);
-        }
-    }
-
-    @Override
-    public void asyncBroadcast(Message message, ArgRunnable<Message> callback) {
-        for (RaftNode node: nodes) {
-            asyncService.go(()-> {
-                var reply = node.dispatchRequest(message);
-                callback.run(reply);
-            });
-        }
     }
 }

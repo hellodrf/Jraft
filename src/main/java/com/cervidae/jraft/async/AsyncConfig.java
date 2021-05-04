@@ -4,6 +4,7 @@ import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -22,13 +23,14 @@ public class AsyncConfig implements AsyncConfigurer, ApplicationContextAware {
     private ApplicationContext context;
 
     @Override
+    @Bean("AsyncExecutor")
     public Executor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(CORE_POOL_SIZE);
         executor.setMaxPoolSize(MAX_POOL_SIZE);
         executor.setQueueCapacity(QUEUE_CAPACITY);
         executor.setKeepAliveSeconds(KEEP_ALIVE_TIME);
-        executor.setThreadNamePrefix("AsyncExecutor-");
+        executor.setThreadNamePrefix("pool-1-thread-");
         executor.initialize();
         return executor;
     }

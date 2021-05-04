@@ -1,6 +1,5 @@
 package com.cervidae.jraft.node;
 
-import com.cervidae.jraft.async.ArgRunnable;
 import com.cervidae.jraft.async.AsyncService;
 import com.cervidae.jraft.msg.Message;
 import lombok.Data;
@@ -8,8 +7,11 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 @Log4j2
 @Data
@@ -23,7 +25,7 @@ public class ClusteredRaftContext implements RaftContext {
 
     RaftNode node;
 
-    String[] nodeIPs;
+    String nodeURLs;
 
     boolean running;
 
@@ -33,7 +35,7 @@ public class ClusteredRaftContext implements RaftContext {
         ClusteredRaftContext.log.info("ClusteredRaftContext created and starting");
         this.id = config.getClusteredId();
         this.asyncService = asyncService;
-        this.nodeIPs = config.getClusteredIPs();
+        this.nodeURLs = config.getClusteredUrls();
         this.clusterSize = config.getClusterSize();
         this.running = false;
         this.node = config.getApplicationContext().getBean(RaftNode.class);
@@ -52,12 +54,13 @@ public class ClusteredRaftContext implements RaftContext {
 
     @Override
     public void shutdown() {
-
+        this.running = false;
+        this.node.shutdown();
     }
 
     @Override
     public int getMyID(RaftNode node) {
-        return 0;
+        return id;
     }
 
     @Override
@@ -66,18 +69,7 @@ public class ClusteredRaftContext implements RaftContext {
     }
 
     @Override
-    public void blockingBroadcast(Message message, ArgRunnable<Message> callback) {
-
-    }
-
-    @Override
-    public void asyncBroadcast(Message message, ArgRunnable<Message> callback) {
-
-    }
-
-    @Override
     public List<RaftNode> getNodes() {
-        return null;
+        return new ArrayList<>(Collections.singletonList(node));
     }
-
 }
