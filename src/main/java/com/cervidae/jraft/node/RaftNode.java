@@ -66,7 +66,6 @@ public class RaftNode implements Serializable {
                 timer.cancel();
             }
         }, (node) -> { // TO
-            node.heartbeat();
             node.timers.put("heartbeatTimer", new Timer("heartbeatTimer", true));
             node.timers.get("heartbeatTimer").schedule(new TimerTask() {
                 @Override
@@ -74,6 +73,7 @@ public class RaftNode implements Serializable {
                     if (node.killed || node.state != State.LEADER) {
                         return;
                     }
+                    node.getLogger().debug("Heartbeat ticked!");
                     node.heartbeat();
                 }
             }, 0, node.config.HEARTBEAT_FREQUENCY);
@@ -90,9 +90,9 @@ public class RaftNode implements Serializable {
 
         public void transition(State targetState, RaftNode node) {
             if (this == targetState) return;
+            node.state = targetState;
             this.from.accept(node);
             targetState.to.accept(node);
-            node.state = targetState;
         }
     }
 
@@ -110,6 +110,9 @@ public class RaftNode implements Serializable {
     private final long ELECTION_DELAY;
     private boolean DEBUG_DISCONNECT = false;
     private List<LogEntry> logEntries = new CopyOnWriteArrayList<>();
+
+    private int currentLeader = -1;
+    private int currentLeadingTerm = -1;
 
     /**
      * Locks
@@ -189,7 +192,7 @@ public class RaftNode implements Serializable {
      * @return string representing this node
      */
     public String toString() {
-        return "N" + id + "[" + state + "|Term" + currentTerm.get() + "|V" + votedFor + "|VT" + voteTerm +
+        return "N" + id + "[" + state.toString().substring(0,4) + "|Term" + currentTerm.get() + "|V" + votedFor + "|VT" + voteTerm +
                 "|HBDue" + (ELECTION_DELAY - System.currentTimeMillis() + lastHeartbeat) + "|D" + (killed ? 1 : 0) + "]";
     }
 
@@ -211,6 +214,7 @@ public class RaftNode implements Serializable {
      */
     private synchronized void incrementAndCheckVoteCount(AtomicInteger voteCount, int threshold) {
         if (voteCount.incrementAndGet() > threshold && this.state == State.CANDIDATE) {
+            this.heartbeat();
             this.state.transition(State.LEADER, this);
             getLogger().info("Election finalised, I am leader of term " + getCurrentTerm().get());
         }
@@ -223,13 +227,13 @@ public class RaftNode implements Serializable {
      */
     @Async
     public void election(String reason, boolean retry) {
-        if (this.killed || (!retry && this.state != State.FOLLOWER)) {
+        if (this.killed || this.currentLeadingTerm >= this.getCurrentTerm().get() || this.state != State.FOLLOWER) {
             getLogger().info("Election ceased prematurely (no need to elect)");
             return;
         }
         try {
             electionMutex.writeLock().lock();
-            if (this.killed || (!retry && this.state != State.FOLLOWER)) {
+            if (this.killed || this.currentLeadingTerm >= this.getCurrentTerm().get() && this.state != State.FOLLOWER) {
                 getLogger().info("Election ceased prematurely (no need to elect)");
                 return;
             }
@@ -282,12 +286,12 @@ public class RaftNode implements Serializable {
                     incrementAndCheckVoteCount(voteCount, threshold);
                 } else {
                     getLogger().info("Election failed, starting a new election");
-                    election("failed election", false);
+                    election("failed election", true);
                 }
             } else {
                 if (this.state == State.CANDIDATE) {
                     getLogger().info("Election latch timeout? starting a new election");
-                    election("failed election", false);
+                    election("failed election", true);
                 }
             }
         } catch (InterruptedException e) {
@@ -300,6 +304,7 @@ public class RaftNode implements Serializable {
     /**
      * Send one heartbeat to all followers
      */
+    @Async
     public void heartbeat() {
         if (this.state != State.LEADER) return;
         var msg = new AppendEntriesRequest(this, null);
@@ -387,6 +392,10 @@ public class RaftNode implements Serializable {
             return reply;
         }
 
+        this.voteTerm = this.currentTerm.get();
+        this.votedFor = msg.getLeaderID();
+        this.currentLeader = msg.getLeaderID();
+        this.currentLeadingTerm = msg.getTerm();
         this.lastHeartbeat = System.currentTimeMillis();
         this.resetElectionTimer();
         reply.setSuccess(true);

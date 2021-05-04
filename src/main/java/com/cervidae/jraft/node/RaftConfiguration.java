@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -12,11 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -33,9 +27,11 @@ public class RaftConfiguration implements ApplicationContextAware {
 
     final TimeUnit GLOBAL_TIMEUNIT = TimeUnit.MILLISECONDS;
 
-    final long MAX_ELECTION_DELAY = 660L;
+    final long MAX_ELECTION_DELAY = 750L;
 
-    final long MIN_ELECTION_DELAY = 550L;
+    final long MIN_ELECTION_DELAY = 450L;
+
+    final long INCREMENTAL_ELECTION_DELAY = 50L;
 
     final long HEARTBEAT_FREQUENCY = 110L;
 

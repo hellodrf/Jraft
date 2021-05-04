@@ -41,6 +41,7 @@ public class RaftController implements ApplicationContextAware {
     @GetMapping(value = "start", params = {"n"})
     public Response<?> start(@RequestParam int n) {
         context.getNodes().set(n, applicationContext.getBean(RaftNode.class));
+        context.getNodes().get(n).start();
         return Response.success(context);
     }
 
