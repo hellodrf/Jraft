@@ -11,6 +11,6 @@ public class LogEntry implements Serializable {
 
     long term;
 
-    Object command;
+    String command;
 
 }

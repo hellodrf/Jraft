@@ -184,6 +184,15 @@ public class RaftNode implements Serializable {
             return -1;
         }
         // DO Something
+        stateMachine.apply(entry);
+        AppendEntriesRequest message = new AppendEntriesRequest(entry);
+
+        for(int i=0; i <config.getClusterSize();i++){
+            if(i == this.id) {
+                continue;
+            }
+            context.sendMessage(i, message);
+        }
         return 0;
     }
 
