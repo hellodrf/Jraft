@@ -16,8 +16,8 @@
       "description": "Description for cervidae.jraft.clustered.clusterSize."
     },
     {
-      "name": "cervidae.jraft.clusteredIPs",
+      "name": "cervidae.jraft.clusteredUrls",
       "type": "java.lang.String",
-      "description": "Description for cervidae.jraft.clustered.id."
+      "description": "Description for cervidae.jraft.clusteredURLs."
     }
   ] }

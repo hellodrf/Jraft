@@ -12,6 +12,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -26,16 +31,15 @@ public class RaftConfiguration implements ApplicationContextAware {
 
     private int clusteredId;
 
-    static final TimeUnit GLOBAL_TIMEUNIT = TimeUnit.MILLISECONDS;
+    final TimeUnit GLOBAL_TIMEUNIT = TimeUnit.MILLISECONDS;
 
-    static final long MAX_ELECTION_DELAY = 560L;
+    final long MAX_ELECTION_DELAY = 660L;
 
-    static final long MIN_ELECTION_DELAY = 550L;
+    final long MIN_ELECTION_DELAY = 550L;
 
-    static final long HEARTBEAT_FREQUENCY = 110L;
+    final long HEARTBEAT_FREQUENCY = 110L;
 
-    @Value("#{'${cervidae.jraft.clusteredIPs}'.split(',')}")
-    private String[] clusteredIPs;
+    private String clusteredUrls;
 
     private ApplicationContext applicationContext;
 
@@ -62,6 +66,5 @@ public class RaftConfiguration implements ApplicationContextAware {
         }
         return raftContext;
     }
-
 
 }
