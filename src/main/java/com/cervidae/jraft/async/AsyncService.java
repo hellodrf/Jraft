@@ -18,7 +18,7 @@ public class AsyncService extends ThreadPoolExecutor implements AsyncUncaughtExc
     private static final int CORE_POOL_SIZE = CPU_CORE_NUM + 1;
     private static final int MAX_POOL_SIZE = CPU_CORE_NUM * 2 + 1;
     private static final int QUEUE_CAPACITY = 128;
-    private static final Long KEEP_ALIVE_TIME = 1L;
+    private static final Long KEEP_ALIVE_TIME = 10L;
 
     @Autowired
     private AsyncService() {

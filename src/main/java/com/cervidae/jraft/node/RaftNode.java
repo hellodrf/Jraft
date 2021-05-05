@@ -37,8 +37,7 @@ public class RaftNode implements Serializable {
      * Follower, Candidate and Leader
      * Use transition() to change state
      * eg. changing state from current state (this.state) to leader:
-     *           this.state.transition(State.LEADER, this)
-     *
+     * this.state.transition(State.LEADER, this)
      */
     public enum State {
         FOLLOWER((node) -> { // FROM
@@ -97,7 +96,7 @@ public class RaftNode implements Serializable {
     }
 
     /**
-     * Node params
+     * Standard Raft params
      */
     private int id;
     private volatile State state;
@@ -106,13 +105,18 @@ public class RaftNode implements Serializable {
     private volatile int votedFor = -1;
     private volatile int voteTerm = -1;
     private volatile int lastApplied = -1;
-    private volatile long lastHeartbeat;
-    private final long ELECTION_DELAY;
-    private boolean DEBUG_DISCONNECT = false;
+
     private List<LogEntry> logEntries = new CopyOnWriteArrayList<>();
 
+    /**
+     * Additional params
+     */
+    private volatile long lastHeartbeat;
     private int currentLeader = -1;
     private int currentLeadingTerm = -1;
+
+    private final long ELECTION_DELAY;
+    private boolean DEBUG_DISCONNECT = false;
 
     /**
      * Locks
@@ -166,7 +170,8 @@ public class RaftNode implements Serializable {
         //State.FOLLOWER.to.accept(this);
         try {
             Thread.sleep(ELECTION_DELAY);
-        } catch (InterruptedException ignored) {}
+        } catch (InterruptedException ignored) {
+        }
 
         if (this.getCurrentTerm().get() == 0) {
             // no leader exists (or the term will be updated by heartbeat)
@@ -181,6 +186,7 @@ public class RaftNode implements Serializable {
 
     /**
      * Use this logger (not the same as LogEntries!) to log all info/warnings
+     *
      * @return logger
      */
     private Logger getLogger() {
@@ -189,15 +195,17 @@ public class RaftNode implements Serializable {
 
     /**
      * Covert node to an informative string
+     *
      * @return string representing this node
      */
     public String toString() {
-        return "N" + id + "[" + state.toString().substring(0,4) + "|Term" + currentTerm.get() + "|V" + votedFor + "|VT" + voteTerm +
+        return "N" + id + "[" + state.toString().substring(0, 4) + "|Term" + currentTerm.get() + "|V" + votedFor + "|VT" + voteTerm +
                 "|HBDue" + (ELECTION_DELAY - System.currentTimeMillis() + lastHeartbeat) + "|D" + (killed ? 1 : 0) + "]";
     }
 
     /**
      * Push a new log entry to consensus
+     *
      * @param entry log entry
      * @return promised entry index
      */
@@ -212,28 +220,32 @@ public class RaftNode implements Serializable {
     /**
      * Private helper function
      */
-    private synchronized void incrementAndCheckVoteCount(AtomicInteger voteCount, int threshold) {
+    private boolean incrementAndCheckVoteCount(AtomicInteger voteCount, int threshold) {
         if (voteCount.incrementAndGet() > threshold && this.state == State.CANDIDATE) {
-            this.heartbeat();
             this.state.transition(State.LEADER, this);
             getLogger().info("Election finalised, I am leader of term " + getCurrentTerm().get());
+            return true;
+        } else if (this.state != State.CANDIDATE) {
+            getLogger().warn("I am not Candidate? Cannot perform vote check");
         }
+        return false;
     }
 
     /**
      * Start a new election
+     *
      * @param reason description for this election (solely for logging purposes)
-     * @param retry is this a retry attempt? (triggered by failed election)
+     * @param retry  is this a retry attempt? (triggered by failed election)
      */
     @Async
     public void election(String reason, boolean retry) {
-        if (this.killed || this.currentLeadingTerm >= this.getCurrentTerm().get() || this.state != State.FOLLOWER) {
+        if (this.killed || this.state != State.FOLLOWER) {
             getLogger().info("Election ceased prematurely (no need to elect)");
             return;
         }
         try {
             electionMutex.writeLock().lock();
-            if (this.killed || this.currentLeadingTerm >= this.getCurrentTerm().get() && this.state != State.FOLLOWER) {
+            if (this.killed || this.state != State.FOLLOWER) {
                 getLogger().info("Election ceased prematurely (no need to elect)");
                 return;
             }
@@ -268,13 +280,16 @@ public class RaftNode implements Serializable {
                             return;
                         }
                         if (this.killed || this.state != State.CANDIDATE) {
+                            getLogger().warn("I am not Candidate? Cannot process votes");
                             return;
                         }
                         if (reply.isVoteGranted()) {
-                            getLogger().info("Vote received from " + rcv);
                             incrementAndCheckVoteCount(voteCount, threshold);
+                            getLogger().info("Vote received from " + rcv +
+                                    " (VC=" + voteCount.get() + "|TH=" + threshold + ")");
                         } else {
-                            getLogger().info("De-Vote received from " + rcv);
+                            getLogger().info("De-Vote received from " + rcv +
+                                    " (VC=" + voteCount.get() + "|TH=" + threshold + ")");
                         }
                     } finally {
                         latch.countDown();
@@ -285,14 +300,31 @@ public class RaftNode implements Serializable {
                 if (voteCount.get() > threshold) {
                     incrementAndCheckVoteCount(voteCount, threshold);
                 } else {
+                    if (this.state != State.CANDIDATE) {
+                        return;
+                    }
                     getLogger().info("Election failed, starting a new election");
+                    Thread.sleep(200);
+                    if (this.state != State.CANDIDATE) {
+                        return;
+                    }
+                    this.state.transition(State.FOLLOWER, this);
                     election("failed election", true);
                 }
             } else {
-                if (this.state == State.CANDIDATE) {
-                    getLogger().info("Election latch timeout? starting a new election");
-                    election("failed election", true);
+                if (this.state != State.CANDIDATE) {
+                    return;
                 }
+                getLogger().info("Election latch timeout, some Nodes are down?");
+                if (incrementAndCheckVoteCount(voteCount, threshold)) {
+                    return;
+                }
+                Thread.sleep(200);
+                if (this.state != State.CANDIDATE) {
+                    return;
+                }
+                this.state.transition(State.FOLLOWER, this);
+                election("failed election", true);
             }
         } catch (InterruptedException e) {
             getLogger().info("Election latch interrupted?");
@@ -304,7 +336,6 @@ public class RaftNode implements Serializable {
     /**
      * Send one heartbeat to all followers
      */
-    @Async
     public void heartbeat() {
         if (this.state != State.LEADER) return;
         var msg = new AppendEntriesRequest(this, null);
@@ -317,6 +348,7 @@ public class RaftNode implements Serializable {
                     var reply = (AppendEntriesReply) context.sendMessage(finalI, msg);
                     if (!reply.isSuccess()) {
                         getLogger().warn("Heartbeat rejected by N" + finalI);
+                        this.state.transition(State.FOLLOWER, this);
                     } else {
                         getLogger().info("Heartbeat accepted by N" + finalI);
                     }
@@ -370,29 +402,26 @@ public class RaftNode implements Serializable {
 
     /**
      * Handler for appendEntries RPC
+     *
      * @param msg request msg
      * @return reply msg
      */
-    public synchronized AppendEntriesReply appendEntriesHandler(AppendEntriesRequest msg) {
+    public AppendEntriesReply appendEntriesHandler(AppendEntriesRequest msg) {
+        var reply = new AppendEntriesReply(this.getCurrentTerm().get(), false);
+
         if (this.currentTerm.get() < msg.getTerm()) {
             if (state != State.FOLLOWER) {
                 getLogger().info(msg.getType() + " RPC from N" + msg.getLeaderID() + " has term " + msg.getTerm() +
                         " > my term " + this.getCurrentTerm().get() + ", converting to follower");
             }
             this.currentTerm.set(msg.getTerm());
-            this.state.transition(State.FOLLOWER, this);
-            this.voteTerm = this.currentTerm.get();
-            this.votedFor = msg.getLeaderID();
-        }
-
-        var reply = new AppendEntriesReply(this.getCurrentTerm().get(), false);
-        if (this.currentTerm.get() > msg.getTerm()) {
-            getLogger().info(msg.getType() + " RPC rejected - Term outdated :" +
-                    msg.getTerm() + this.getCurrentTerm().get());
+        } else if (this.currentTerm.get() > msg.getTerm()) {
+            getLogger().info(msg.getType() + " RPC rejected - Term outdated (MSG" +
+                    msg.getTerm() +"|CUR"+ this.getCurrentTerm().get() + ")");
             return reply;
         }
 
-        this.voteTerm = this.currentTerm.get();
+        this.voteTerm = msg.getTerm();
         this.votedFor = msg.getLeaderID();
         this.currentLeader = msg.getLeaderID();
         this.currentLeadingTerm = msg.getTerm();
@@ -416,16 +445,17 @@ public class RaftNode implements Serializable {
 
     /**
      * Handler for requestVote RPC
+     *
      * @param msg request msg
      * @return reply msg
      */
-    public synchronized RequestVoteReply requestVoteHandler(RequestVoteRequest msg) {
+    public RequestVoteReply requestVoteHandler(RequestVoteRequest msg) {
         if (this.currentTerm.get() < msg.getTerm()) {
             if (state != State.FOLLOWER) {
                 getLogger().info(msg.getType() + " RPC from N" + msg.getCandidateID() + " has term " + msg.getTerm() +
                         " > my term " + this.getCurrentTerm().get() + ", converting to follower");
             }
-            // this.currentTerm.set(msg.getTerm());
+            this.currentTerm.set(msg.getTerm());
             this.state.transition(State.FOLLOWER, this);
             if (this.getCurrentTerm().get() != 0) {
                 // prevent double election
@@ -435,19 +465,19 @@ public class RaftNode implements Serializable {
         var reply = new RequestVoteReply(this.currentTerm.get(), false);
 
         if (this.currentTerm.get() > msg.getTerm()) {
-            getLogger().info("De-voted N" + msg.getCandidateID() + " due to outdated term");
+            getLogger().info("De-voted N" + msg.getCandidateID() + " - term outdated");
             return reply;
         }
-        if (this.voteTerm >= this.currentTerm.get()) {
-            getLogger().info("De-voted N" + msg.getCandidateID() + " due to already voted");
+        if (this.voteTerm >= msg.getTerm()) {
+            getLogger().info("De-voted N" + msg.getCandidateID() + " - already voted");
             return reply;
         }
         if (this.logEntries.size() - 1 > msg.getLastLogIndex()) {
-            getLogger().info("De-voted N" + msg.getCandidateID() + " due to outdated logs");
+            getLogger().info("De-voted N" + msg.getCandidateID() + " -  logs outdated");
             return reply;
         }
         reply.setVoteGranted(true);
-        this.voteTerm = this.currentTerm.get();
+        this.voteTerm = msg.getTerm();
         this.votedFor = msg.getCandidateID();
         getLogger().info("Voted N" + msg.getCandidateID());
         return reply;
@@ -455,6 +485,7 @@ public class RaftNode implements Serializable {
 
     /**
      * Dispatch msg to their handlers
+     *
      * @param msg request msg
      * @return reply msg
      */

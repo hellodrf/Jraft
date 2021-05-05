@@ -2,6 +2,7 @@ package com.cervidae.jraft.restful;
 
 import com.cervidae.jraft.node.RaftContext;
 import com.cervidae.jraft.node.RaftNode;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -11,7 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+
 @RestController
+@Log4j2
 @RequestMapping("raft")
 public class RaftController implements ApplicationContextAware {
 
@@ -25,9 +28,10 @@ public class RaftController implements ApplicationContextAware {
 
     // GET localhost:8080/raft/kill?n=1
     @GetMapping(value = "kill", params = {"n"})
-    public Response<?> shutdown(@RequestParam int n) {
+    public String shutdown(@RequestParam int n) {
         context.getNodes().get(n).shutdown();
-        return Response.success(context);
+        log.warn("Killed node " + n);
+        return info();
     }
 
     // GET localhost:8080/raft/info
@@ -39,10 +43,11 @@ public class RaftController implements ApplicationContextAware {
     }
 
     @GetMapping(value = "start", params = {"n"})
-    public Response<?> start(@RequestParam int n) {
+    public String start(@RequestParam int n) {
         context.getNodes().set(n, applicationContext.getBean(RaftNode.class));
         context.getNodes().get(n).start();
-        return Response.success(context);
+        log.warn("Started node " + n);
+        return info();
     }
 
     @Override
