@@ -184,6 +184,7 @@ public class RaftNode implements Serializable {
             return -1;
         }
         // DO Something
+        entry.term = this.currentTerm;
         stateMachine.apply(entry);
         AppendEntriesRequest message = new AppendEntriesRequest(entry);
 
@@ -210,6 +211,10 @@ public class RaftNode implements Serializable {
     }
 
     public AppendEntriesReply appendEntriesHandler(AppendEntriesRequest msg) {
+        if (msg.getEntry().term.get() < currentTerm.get()) {
+            return null;
+        }
+        
         return null;
     }
 
