@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.io.Serializable;
 import java.util.List;
@@ -275,7 +276,7 @@ public class RaftNode implements Serializable {
                         RequestVoteReply reply;
                         try {
                             reply = (RequestVoteReply) context.sendMessage(rcv, req);
-                        } catch (TimeoutException e) {
+                        } catch (Exception e) {
                             getLogger().warn("RequestVote RPC to N" + rcv + " timed out?");
                             return;
                         }
@@ -296,14 +297,14 @@ public class RaftNode implements Serializable {
                     }
                 });
             }
-            if (latch.await(ELECTION_DELAY, config.GLOBAL_TIMEUNIT)) {
+            if (latch.await(1000, config.GLOBAL_TIMEUNIT)) {
                 if (voteCount.get() > threshold) {
                     incrementAndCheckVoteCount(voteCount, threshold);
                 } else {
                     if (this.state != State.CANDIDATE) {
                         return;
                     }
-                    getLogger().info("Election failed, starting a new election");
+                    getLogger().warn("Election failed, try starting a new election");
                     Thread.sleep(200);
                     if (this.state != State.CANDIDATE) {
                         return;
@@ -315,7 +316,7 @@ public class RaftNode implements Serializable {
                 if (this.state != State.CANDIDATE) {
                     return;
                 }
-                getLogger().info("Election latch timeout, some Nodes are down?");
+                getLogger().warn("Election latch timeout, some nodes are down?");
                 if (incrementAndCheckVoteCount(voteCount, threshold)) {
                     return;
                 }
@@ -352,7 +353,7 @@ public class RaftNode implements Serializable {
                     } else {
                         getLogger().info("Heartbeat accepted by N" + finalI);
                     }
-                } catch (TimeoutException e) {
+                } catch (ResourceAccessException e) {
                     getLogger().warn("Heartbeat RPC to N" + finalI + " timed out?");
                 }
             });

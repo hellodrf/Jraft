@@ -1,16 +1,17 @@
 package com.cervidae.jraft.msg;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 @Data
 @RequiredArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
+
 public class RequestVoteReply extends Message {
 
     String type = "RequestVoteReply";
+
+    public final Class<? extends Message> replyClass = null;
 
     @NonNull
     int term;

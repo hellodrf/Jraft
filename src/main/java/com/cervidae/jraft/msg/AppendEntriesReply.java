@@ -5,9 +5,12 @@ import lombok.*;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @RequiredArgsConstructor
+@NoArgsConstructor
 public class AppendEntriesReply extends Message {
 
-    String type = "AppendEntriesReply";
+    public final String type = "AppendEntriesReply";
+
+    public final Class<? extends Message> replyClass = null;
 
     @NonNull
     int term;

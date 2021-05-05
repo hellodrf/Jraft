@@ -5,9 +5,12 @@ import lombok.*;
 @Data
 @RequiredArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
 public class RequestVoteRequest extends Message {
 
     String type = "RequestVoteRequest";
+
+    public final Class<? extends Message> replyClass = RequestVoteReply.class;
 
     @NonNull
     int term;

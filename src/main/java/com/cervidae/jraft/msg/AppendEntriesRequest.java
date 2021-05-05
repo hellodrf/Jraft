@@ -4,14 +4,18 @@ import com.cervidae.jraft.node.LogEntry;
 import com.cervidae.jraft.node.RaftNode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
+@NoArgsConstructor
 public class AppendEntriesRequest extends Message {
 
-    String type = "AppendEntriesRequest";
+    public final String type = "AppendEntriesRequest";
+
+    public final Class<? extends Message> replyClass = AppendEntriesReply.class;
 
     int term;
     int leaderID;

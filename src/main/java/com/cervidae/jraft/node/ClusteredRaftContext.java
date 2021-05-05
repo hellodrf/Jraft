@@ -1,15 +1,17 @@
 package com.cervidae.jraft.node;
 
 import com.cervidae.jraft.async.AsyncService;
+import com.cervidae.jraft.msg.AppendEntriesRequest;
 import com.cervidae.jraft.msg.Message;
+import com.cervidae.jraft.msg.RequestVoteReply;
+import com.cervidae.jraft.msg.RequestVoteRequest;
+import com.cervidae.jraft.restful.RestClientService;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,14 +27,17 @@ public class ClusteredRaftContext implements RaftContext {
 
     RaftNode node;
 
-    String nodeURLs;
+    List<String> nodeURLs;
 
     boolean running;
 
     final AsyncService asyncService;
 
-    public ClusteredRaftContext(AsyncService asyncService, RaftConfiguration config) {
+    final RestClientService restClientService;
+
+    public ClusteredRaftContext(AsyncService asyncService, RaftConfiguration config, RestClientService restClientService) {
         ClusteredRaftContext.log.info("ClusteredRaftContext created and starting");
+        this.restClientService = restClientService;
         this.id = config.getClusteredId();
         this.asyncService = asyncService;
         this.nodeURLs = config.getClusteredUrls();
@@ -65,7 +70,12 @@ public class ClusteredRaftContext implements RaftContext {
 
     @Override
     public Message sendMessage(int target, Message message) {
-        return null;
+        if (message instanceof RequestVoteRequest) {
+            return restClientService.sendRequestVote(nodeURLs.get(target), (RequestVoteRequest)message);
+        } else if (message instanceof AppendEntriesRequest) {
+            return restClientService.sendAppendEntries(nodeURLs.get(target), (AppendEntriesRequest)message);
+        }
+        throw new IllegalArgumentException();
     }
 
     @Override

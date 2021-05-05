@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -70,9 +71,9 @@ public class LocalRaftContext implements RaftContext {
     }
 
     @Override
-    public Message sendMessage(int target, Message message) throws TimeoutException {
+    public Message sendMessage(int target, Message message) throws ResourceAccessException {
         var node = nodes.get(target);
-        if (node.isDEBUG_DISCONNECT() || node.isKilled()) throw new TimeoutException();
+        if (node.isDEBUG_DISCONNECT() || node.isKilled()) throw new ResourceAccessException("Read timed out");
         return node.dispatchRequest(message);
     }
 }

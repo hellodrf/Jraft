@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -35,7 +37,7 @@ public class RaftConfiguration implements ApplicationContextAware {
 
     final long HEARTBEAT_FREQUENCY = 110L;
 
-    private String clusteredUrls;
+    private ArrayList<String> clusteredUrls;
 
     private ApplicationContext applicationContext;
 
@@ -61,6 +63,10 @@ public class RaftConfiguration implements ApplicationContextAware {
             raftContext.start();
         }
         return raftContext;
+    }
+
+    public void setClusteredUrls(String urls) {
+        this.clusteredUrls = new ArrayList<>(Arrays.asList(urls.split(",")));
     }
 
 }
