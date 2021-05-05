@@ -2,16 +2,13 @@ package com.cervidae.jraft.async;
 
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
-import org.apache.logging.log4j.Level;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Log4j2
 @Component
@@ -23,19 +20,28 @@ public class AsyncService extends ThreadPoolExecutor implements AsyncUncaughtExc
     private static final int QUEUE_CAPACITY = 128;
     private static final Long KEEP_ALIVE_TIME = 1L;
 
+    @Autowired
     private AsyncService() {
         super(CORE_POOL_SIZE,
                 MAX_POOL_SIZE, KEEP_ALIVE_TIME, TimeUnit.SECONDS, new ArrayBlockingQueue<>(QUEUE_CAPACITY));
     }
 
+    /**
+     * Submit an async task to the thread pool
+     * @param task runnable task
+     * @return future
+     */
     @Override
     public Future<?> submit(Runnable task) {
-        log.log(Level.TRACE, "Task summited");
         return super.submit(task);
     }
 
-    public Future<?> go(Runnable task) {
-        return submit(task);
+    /**
+     * Submit an async task to the thread pool
+     * @param task runnable task
+     */
+    public void go(Runnable task) {
+        submit(task);
     }
 
     public boolean close() {

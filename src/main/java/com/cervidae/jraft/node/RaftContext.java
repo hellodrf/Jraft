@@ -1,7 +1,8 @@
 package com.cervidae.jraft.node;
 
-import com.cervidae.jraft.async.ArgRunnable;
 import com.cervidae.jraft.msg.Message;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public interface RaftContext {
 
@@ -15,10 +16,8 @@ public interface RaftContext {
 
     boolean isRunning();
 
-    Message sendMessage(int target, Message message);
+    Message sendMessage(int target, Message message) throws TimeoutException;
 
-    void blockingBroadcast(Message message, ArgRunnable<Message> callback);
-
-    void asyncBroadcast(Message message, ArgRunnable<Message> callback);
+    List<RaftNode> getNodes();
 
 }

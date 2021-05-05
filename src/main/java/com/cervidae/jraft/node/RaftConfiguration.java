@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -26,14 +25,17 @@ public class RaftConfiguration implements ApplicationContextAware {
 
     private int clusteredId;
 
-    static final TimeUnit GLOBAL_TIMEUNIT = TimeUnit.MILLISECONDS;
+    final TimeUnit GLOBAL_TIMEUNIT = TimeUnit.MILLISECONDS;
 
-    static final long MAX_ELECTION_DELAY = 550L;
+    final long MAX_ELECTION_DELAY = 750L;
 
-    static final long MIN_ELECTION_DELAY = 650L;
+    final long MIN_ELECTION_DELAY = 450L;
 
-    @Value("#{'${cervidae.jraft.clusteredIPs}'.split(',')}")
-    private String[] clusteredIPs;
+    final long INCREMENTAL_ELECTION_DELAY = 50L;
+
+    final long HEARTBEAT_FREQUENCY = 110L;
+
+    private String clusteredUrls;
 
     private ApplicationContext applicationContext;
 
@@ -60,6 +62,5 @@ public class RaftConfiguration implements ApplicationContextAware {
         }
         return raftContext;
     }
-
 
 }
