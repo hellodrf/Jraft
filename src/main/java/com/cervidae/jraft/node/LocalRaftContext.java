@@ -3,7 +3,6 @@ package com.cervidae.jraft.node;
 import com.cervidae.jraft.async.AsyncService;
 import com.cervidae.jraft.model.Account;
 import com.cervidae.jraft.msg.Message;
-import com.cervidae.jraft.statemachine.ConcurrentHashMapKVService;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;

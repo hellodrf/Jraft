@@ -13,6 +13,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,12 @@ public class RaftController implements ApplicationContextAware {
     @Autowired
     public RaftController(RaftContext context) {
         this.context = context;
+    }
+
+    @Override
+    @Autowired
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
     }
 
     // GET localhost:8080/raft/kill?n=1
@@ -71,17 +78,8 @@ public class RaftController implements ApplicationContextAware {
         return context.getMessageLogs();
     }
 
-    @Override
-    @Autowired
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
-
-
-
-
     @GetMapping(value = "/check_balance")
-    public Response checkBalance(@RequestParam("userId") String userId) {
+    public Response<?> checkBalance(@RequestParam("userId") String userId) {
         if(userId == null){
             return Response.fail("user does not exist");
         }
@@ -96,7 +94,7 @@ public class RaftController implements ApplicationContextAware {
     }
 
     @PostMapping(value = "/create_account")
-    public Response createAccount(@RequestBody Map<String, Object> requestMap) {
+    public Response<?> createAccount(@RequestBody Map<String, Object> requestMap) {
         if(requestMap == null){
             return Response.fail("error input");
         }
@@ -120,7 +118,7 @@ public class RaftController implements ApplicationContextAware {
 
 
     @PostMapping(value = "/deposit")
-    public Response deposit(@RequestBody Map<String, Object> requestMap) {
+    public Response<?> deposit(@RequestBody Map<String, Object> requestMap) {
         if(requestMap == null){
             return Response.fail("error input");
         }
@@ -144,7 +142,7 @@ public class RaftController implements ApplicationContextAware {
 
 
     @PostMapping(value = "/withdraw")
-    public Response withdraw(@RequestBody Map<String, Object> requestMap) {
+    public Response<?> withdraw(@RequestBody Map<String, Object> requestMap) {
         if(requestMap == null){
             return Response.fail("error input");
         }

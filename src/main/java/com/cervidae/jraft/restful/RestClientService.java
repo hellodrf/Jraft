@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
 public class RestClientService {
 
     final RestTemplate template;
-    HttpHeaders headers = new HttpHeaders();
+    final HttpHeaders headers = new HttpHeaders();
 
     public RestClientService() {
         var fact = new HttpComponentsClientHttpRequestFactory();
@@ -36,6 +36,18 @@ public class RestClientService {
     public AppendEntriesReply sendAppendEntries(String url, AppendEntriesRequest msg) throws ResourceAccessException {
         var reply = template.postForObject("http://" + url + "/rpc/entry",
                 msg, AppendEntriesReply.class);
+        Assert.notNull(reply, "Reply is null?");
+        return reply;
+    }
+
+    public Response<?> request(String url, Object body) {
+        var reply = template.postForObject("http://" + url, body, Response.class);
+        Assert.notNull(reply, "Reply is null?");
+        return reply;
+    }
+
+    public String getForString(String url) {
+        var reply = template.getForObject("http://" + url, String.class);
         Assert.notNull(reply, "Reply is null?");
         return reply;
     }

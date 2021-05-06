@@ -19,5 +19,10 @@
       "name": "cervidae.jraft.clusteredUrls",
       "type": "java.lang.String",
       "description": "Description for cervidae.jraft.clusteredURLs."
+    },
+    {
+      "name": "cervidae.jraft.isMonitor",
+      "type": "java.lang.Boolean",
+      "description": "Description for cervidae.jraft.isMonitor."
     }
   ] }

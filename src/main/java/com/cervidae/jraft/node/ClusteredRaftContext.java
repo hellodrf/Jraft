@@ -26,25 +26,22 @@ public class ClusteredRaftContext implements RaftContext {
      * Cluster params
      */
     int clusterSize;
-    List<String> nodeURLs;
 
     /**
      * Node params
      */
     int id;
-
     RaftNode node;
-
     List<String> nodeURLs;
-
     boolean running;
 
     /**
      * External Services
      */
     final AsyncService asyncService;
-
     final RestClientService restClientService;
+
+
     List<String> messageLogs = new ArrayList<>(1000);
 
     public ClusteredRaftContext(AsyncService asyncService, RaftConfiguration config, RestClientService restClientService) {
@@ -55,7 +52,9 @@ public class ClusteredRaftContext implements RaftContext {
         this.nodeURLs = config.getClusteredUrls();
         this.clusterSize = config.getClusterSize();
         this.running = false;
-        this.node = config.getApplicationContext().getBean(RaftNode.class);
+        if (this.id != -1) {
+            this.node = config.getApplicationContext().getBean(RaftNode.class);
+        }
     }
 
     @Override
@@ -65,6 +64,7 @@ public class ClusteredRaftContext implements RaftContext {
 
     @Override
     public void start() {
+        if (this.id == -1) return;
         this.running = true;
         this.node.start();
     }
