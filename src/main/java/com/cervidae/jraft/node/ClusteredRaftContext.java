@@ -1,6 +1,7 @@
 package com.cervidae.jraft.node;
 
 import com.cervidae.jraft.async.AsyncService;
+import com.cervidae.jraft.model.Account;
 import com.cervidae.jraft.msg.AppendEntriesRequest;
 import com.cervidae.jraft.msg.Message;
 import com.cervidae.jraft.msg.RequestVoteReply;
@@ -81,5 +82,15 @@ public class ClusteredRaftContext implements RaftContext {
     @Override
     public List<RaftNode> getNodes() {
         return new ArrayList<>(Collections.singletonList(node));
+    }
+
+    @Override
+    public Account getAccount(String userId) {
+        return null;
+    }
+
+    @Override
+    public RaftNode getLeader() {
+        return null;
     }
 }
