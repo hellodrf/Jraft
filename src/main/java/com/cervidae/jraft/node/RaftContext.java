@@ -4,6 +4,7 @@ import com.cervidae.jraft.msg.Message;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 public interface RaftContext {
 
@@ -22,5 +23,9 @@ public interface RaftContext {
     List<RaftNode> getNodes();
 
     List<String> getMessageLogs();
+
+    Account getAccount(String userId);
+
+    RaftNode getLeader();
 
 }
