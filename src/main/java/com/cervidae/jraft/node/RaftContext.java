@@ -1,5 +1,6 @@
 package com.cervidae.jraft.node;
 
+import com.cervidae.jraft.model.Account;
 import com.cervidae.jraft.msg.Message;
 import org.springframework.web.client.ResourceAccessException;
 
@@ -21,5 +22,9 @@ public interface RaftContext {
     Message sendMessage(int target, Message message) throws ResourceAccessException;
 
     List<RaftNode> getNodes();
+
+    Account getAccount(String userId);
+
+    RaftNode getLeader();
 
 }

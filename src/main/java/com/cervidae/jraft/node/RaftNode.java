@@ -1,7 +1,9 @@
 package com.cervidae.jraft.node;
 
 import com.cervidae.jraft.async.AsyncService;
+import com.cervidae.jraft.model.Account;
 import com.cervidae.jraft.msg.*;
+import com.cervidae.jraft.statemachine.ConcurrentHashMapKVService;
 import com.cervidae.jraft.statemachine.StateMachine;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
@@ -216,6 +218,31 @@ public class RaftNode implements Serializable {
         }
         // DO Something
         return 0;
+    }
+
+
+    /**
+     *
+     * @param userId
+     * @return
+     */
+    public Account getAccount(String userId){
+        if (getState() != State.LEADER) {
+            return null;
+        }
+
+        if (stateMachine instanceof ConcurrentHashMapKVService) {
+            if(!((ConcurrentHashMapKVService) stateMachine).getStorage().containsKey(userId)){
+                return null;
+            }
+            Account account = new Account();
+            account.setUserId(userId);
+            account.setNumber(((ConcurrentHashMapKVService) stateMachine).getStorage().get(userId).toString());
+            return account;
+        }
+
+        return null;
+
     }
 
     /**

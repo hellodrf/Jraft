@@ -1,7 +1,9 @@
 package com.cervidae.jraft.node;
 
 import com.cervidae.jraft.async.AsyncService;
+import com.cervidae.jraft.model.Account;
 import com.cervidae.jraft.msg.Message;
+import com.cervidae.jraft.statemachine.ConcurrentHashMapKVService;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -63,6 +65,26 @@ public class LocalRaftContext implements RaftContext {
             }
         }
         return -1;
+    }
+    @Override
+    public Account getAccount(String userId){
+        for (RaftNode node: nodes) {
+            Account account = node.getAccount(userId);
+            if (account != null) {
+                return account;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public RaftNode getLeader(){
+        for (RaftNode node: nodes) {
+            if(node.getState() == RaftNode.State.LEADER){
+                return node;
+            }
+        }
+        return null;
     }
 
     @Override
