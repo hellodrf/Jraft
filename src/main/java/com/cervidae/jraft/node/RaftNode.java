@@ -15,10 +15,7 @@ import org.springframework.util.Assert;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -107,14 +104,12 @@ public class RaftNode implements Serializable {
     private volatile int voteTerm = -1;
     private volatile int lastApplied = -1;
 
-    private List<LogEntry> logEntries = new CopyOnWriteArrayList<>();
+    private List<LogEntry> logEntries = Collections.synchronizedList(new ArrayList<>());
 
     /**
      * Additional params
      */
     private volatile long lastHeartbeat;
-    private int currentLeader = -1;
-    private int currentLeadingTerm = -1;
 
     private final long ELECTION_DELAY;
     private boolean DEBUG_DISCONNECT = false;
@@ -410,6 +405,7 @@ public class RaftNode implements Serializable {
     public AppendEntriesReply appendEntriesHandler(AppendEntriesRequest msg) {
         var reply = new AppendEntriesReply(this.getCurrentTerm().get(), false);
 
+        // Validate rpc
         if (this.currentTerm.get() < msg.getTerm()) {
             if (state != State.FOLLOWER) {
                 getLogger().info(msg.getType() + " RPC from N" + msg.getLeaderID() + " has term " + msg.getTerm() +
@@ -424,8 +420,6 @@ public class RaftNode implements Serializable {
 
         this.voteTerm = msg.getTerm();
         this.votedFor = msg.getLeaderID();
-        this.currentLeader = msg.getLeaderID();
-        this.currentLeadingTerm = msg.getTerm();
         this.lastHeartbeat = System.currentTimeMillis();
         this.resetElectionTimer();
         reply.setSuccess(true);

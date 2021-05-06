@@ -21,19 +21,25 @@ import java.util.List;
 @Lazy
 public class ClusteredRaftContext implements RaftContext {
 
+    /**
+     * Cluster params
+     */
     int clusterSize;
-
-    int id;
-
-    RaftNode node;
-
     List<String> nodeURLs;
 
+    /**
+     * Node params
+     */
+    int id;
+    RaftNode node;
     boolean running;
 
+    /**
+     * External Services
+     */
     final AsyncService asyncService;
-
     final RestClientService restClientService;
+    List<String> messageLogs = new ArrayList<>(1000);
 
     public ClusteredRaftContext(AsyncService asyncService, RaftConfiguration config, RestClientService restClientService) {
         ClusteredRaftContext.log.info("ClusteredRaftContext created and starting");
@@ -71,9 +77,17 @@ public class ClusteredRaftContext implements RaftContext {
     @Override
     public Message sendMessage(int target, Message message) {
         if (message instanceof RequestVoteRequest) {
-            return restClientService.sendRequestVote(nodeURLs.get(target), (RequestVoteRequest)message);
+            messageLogs.add("SND->" + target + "  " +message);
+            var reply = restClientService.sendRequestVote(nodeURLs.get(target),
+                    (RequestVoteRequest)message);
+            messageLogs.add(target + "->RCV  " + reply);
+            return reply;
         } else if (message instanceof AppendEntriesRequest) {
-            return restClientService.sendAppendEntries(nodeURLs.get(target), (AppendEntriesRequest)message);
+            messageLogs.add("SND->" + target + "  " +message);
+            var reply = restClientService.sendAppendEntries(nodeURLs.get(target),
+                    (AppendEntriesRequest)message);
+            messageLogs.add(target + "->RCV  " + reply);
+            return reply;
         }
         throw new IllegalArgumentException();
     }
@@ -82,4 +96,5 @@ public class ClusteredRaftContext implements RaftContext {
     public List<RaftNode> getNodes() {
         return new ArrayList<>(Collections.singletonList(node));
     }
+
 }

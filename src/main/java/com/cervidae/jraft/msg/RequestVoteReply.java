@@ -19,4 +19,11 @@ public class RequestVoteReply extends Message {
     @NonNull
     boolean voteGranted;
 
+    @Override
+    public String toString() {
+        return "RequestVoteReply{" +
+                "term=" + term +
+                ", voteGranted=" + voteGranted +
+                '}';
+    }
 }

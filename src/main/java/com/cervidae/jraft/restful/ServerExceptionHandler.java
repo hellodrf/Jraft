@@ -40,6 +40,7 @@ public class ServerExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public Response<?> invalidParameterHandler(Exception e) {
+        Logger.getGlobal().severe(e.getMessage());
         return Response.fail(e.getMessage());
     }
 

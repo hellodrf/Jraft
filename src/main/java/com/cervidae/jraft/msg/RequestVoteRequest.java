@@ -24,4 +24,13 @@ public class RequestVoteRequest extends Message {
     @NonNull
     int lastLogTerm;
 
+    @Override
+    public String toString() {
+        return "RequestVoteRequest{" +
+                "term=" + term +
+                ", candidateID=" + candidateID +
+                ", lastLogIndex=" + lastLogIndex +
+                ", lastLogTerm=" + lastLogTerm +
+                '}';
+    }
 }

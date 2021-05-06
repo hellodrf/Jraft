@@ -9,9 +9,9 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeoutException;
 
 @Log4j2
 @Data
@@ -19,12 +19,17 @@ import java.util.concurrent.TimeoutException;
 @Lazy
 public class LocalRaftContext implements RaftContext {
 
+    /**
+     * Cluster params
+     */
     final int clusterSize;
-
     final List<RaftNode> nodes;
-
     boolean running;
+    List<String> messageLogs = new ArrayList<>(1000);
 
+    /**
+     * External Services
+     */
     @JsonIgnore
     private final AsyncService asyncService;
 
@@ -72,8 +77,11 @@ public class LocalRaftContext implements RaftContext {
 
     @Override
     public Message sendMessage(int target, Message message) throws ResourceAccessException {
+        messageLogs.add("SND->" + target + "  " +message);
         var node = nodes.get(target);
         if (node.isDEBUG_DISCONNECT() || node.isKilled()) throw new ResourceAccessException("Read timed out");
-        return node.dispatchRequest(message);
+        var reply = node.dispatchRequest(message);
+        messageLogs.add(target + "->RCV  " + reply);
+        return reply;
     }
 }

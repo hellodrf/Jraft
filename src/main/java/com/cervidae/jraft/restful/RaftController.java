@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 
 @RestController
 @Log4j2
@@ -53,6 +55,11 @@ public class RaftController implements ApplicationContextAware {
         context.getNodes().get(n).start();
         log.warn("Started node " + n);
         return info();
+    }
+
+    @GetMapping(value = "/log")
+    public List<String> getMessageLogs() {
+        return context.getMessageLogs();
     }
 
     @Override

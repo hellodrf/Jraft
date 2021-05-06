@@ -47,4 +47,16 @@ public class AppendEntriesRequest extends Message {
         this.leaderCommit = node.getLastApplied();
         this.entries = entries;
     }
+
+    @Override
+    public String toString() {
+        return "AppendEntriesRequest{" +
+                "term=" + term +
+                ", leaderID=" + leaderID +
+                ", prevLogIndex=" + prevLogIndex +
+                ", prevLogTerm=" + prevLogTerm +
+                ", leaderCommit=" + leaderCommit +
+                ", entries=" + entries +
+                '}';
+    }
 }

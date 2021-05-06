@@ -21,26 +21,27 @@ import java.util.concurrent.TimeUnit;
 @ConfigurationProperties(prefix="cervidae.jraft")
 public class RaftConfiguration implements ApplicationContextAware {
 
+    /**
+     * Cluster params
+     */
     private Boolean isLocalCluster;
-
     private int clusterSize;
-
     private int clusteredId;
-
-    final TimeUnit GLOBAL_TIMEUNIT = TimeUnit.MILLISECONDS;
-
-    final long MAX_ELECTION_DELAY = 750L;
-
-    final long MIN_ELECTION_DELAY = 450L;
-
-    final long INCREMENTAL_ELECTION_DELAY = 50L;
-
-    final long HEARTBEAT_FREQUENCY = 110L;
-
     private ArrayList<String> clusteredUrls;
 
-    private ApplicationContext applicationContext;
+    /**
+     * Constants
+     */
+    final TimeUnit GLOBAL_TIMEUNIT = TimeUnit.MILLISECONDS;
+    final long MAX_ELECTION_DELAY = 750L;
+    final long MIN_ELECTION_DELAY = 450L;
+    final long INCREMENTAL_ELECTION_DELAY = 50L;
+    final long HEARTBEAT_FREQUENCY = 110L;
 
+    /**
+     * External Services
+     */
+    private ApplicationContext applicationContext;
     private RaftContext raftContext;
 
     @Override
