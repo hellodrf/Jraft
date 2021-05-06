@@ -3,6 +3,9 @@ package com.cervidae.jraft.restful;
 import com.cervidae.jraft.node.LocalRaftContext;
 import com.cervidae.jraft.node.RaftContext;
 import com.cervidae.jraft.node.RaftNode;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Log4j2
 @RequestMapping("/raft")
+@Api("RaftController")
 public class RaftController implements ApplicationContextAware {
 
     private final RaftContext context;
@@ -29,6 +33,8 @@ public class RaftController implements ApplicationContextAware {
 
     // GET localhost:8080/raft/kill?n=1
     @GetMapping(value = "/kill", params = {"n"})
+    @ApiOperation("/killNode")
+    @ApiImplicitParam(name = "n", value = "n", required = true, paramType = "query", dataType = "int")
     public String kill(@RequestParam int n) {
         if (context instanceof LocalRaftContext) {
             context.getNodes().get(n).shutdown();
