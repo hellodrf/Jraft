@@ -1,6 +1,7 @@
 package com.cervidae.jraft.restful;
 
 import com.cervidae.jraft.model.Command;
+import io.swagger.annotations.Api;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -13,6 +14,7 @@ import java.util.List;
 @ConditionalOnExpression("${cervidae.jraft.isMonitor:false}")
 @Log4j2
 @RequestMapping("/mon")
+@Api("MonitorController")
 public class MonitorController {
 
     final MonitorService monitorService;
