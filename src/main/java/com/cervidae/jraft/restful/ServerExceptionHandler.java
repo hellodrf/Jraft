@@ -25,12 +25,12 @@ public class ServerExceptionHandler {
     @ExceptionHandler(Exception.class)
     public Response<?> allExceptionHandler(Exception e) {
         Logger.getGlobal().severe("Unexpected exception caught: " + e.getClass().getName());
-        return Response.fail("1002", e.getMessage());
+        return Response.fail(e.getMessage());
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public Response<?> UnauthenticatedExceptionHandler(Exception e) {
-        return Response.fail("3003");
+        return Response.fail(e.getMessage());
     }
 
     /**
@@ -39,7 +39,7 @@ public class ServerExceptionHandler {
      * @return fail response
      */
     @ExceptionHandler(IllegalArgumentException.class)
-    public Response<?> invalidParameterHandler(Exception e) {
+    public Response<?> illegalArgumentExceptionHandler(Exception e) {
         Logger.getGlobal().severe(e.getMessage());
         return Response.fail(e.getMessage());
     }
@@ -61,7 +61,7 @@ public class ServerExceptionHandler {
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     public Response<?> noHandlerFoundExceptionHandler(Exception e) {
-        return Response.fail("1404");
+        return Response.fail(e.getMessage());
     }
 
 }

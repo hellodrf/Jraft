@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 @Log4j2
 @Data
 @ConfigurationProperties(prefix="cervidae.jraft")
-public class RaftConfiguration implements ApplicationContextAware {
+public class RaftConfig implements ApplicationContextAware {
 
     /**
      * Cluster params
@@ -28,6 +28,7 @@ public class RaftConfiguration implements ApplicationContextAware {
     private int clusterSize;
     private int clusteredId;
     private ArrayList<String> clusteredUrls;
+    private String monitorUrl;
 
     /**
      * Constants

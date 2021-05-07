@@ -1,12 +1,13 @@
 package com.cervidae.jraft.restful;
 
-import com.cervidae.jraft.model.Command;
 import io.swagger.annotations.Api;
 import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.List;
 
@@ -18,6 +19,8 @@ import java.util.List;
 public class MonitorController {
 
     final MonitorService monitorService;
+    final Logger eventLogger =
+            org.apache.logging.log4j.LogManager.getLogger("com.cervidae.jraft.MonitorClusterEvent");
 
     @Autowired
     public MonitorController(MonitorService monitorService) {
@@ -27,6 +30,12 @@ public class MonitorController {
     @GetMapping("/info")
     public List<String> getClusterInfo() {
         return monitorService.getClusterStatus();
+    }
+
+    @ApiIgnore
+    @PostMapping("/event")
+    public void handleClusterEvent(@RequestBody String eventMsg) {
+        eventLogger.info(eventMsg);
     }
 
     @GetMapping(value = "/check_balance")
@@ -46,21 +55,17 @@ public class MonitorController {
 
     // DEPOSIT;userid;value
     @PostMapping(value = "/deposit")
-    public Response<?> deposit(@RequestBody Command command) {
-        Assert.notNull(command, "error input");
-        Assert.notNull(command.getUserId(), "error input");
-        log.info("deposit: {}", command);
-        return monitorService.broadcastToLeader("/raft/command", "DEPOSIT;"+command.userId+";"+command.value);
+    public Response<?> deposit(@RequestParam("userId") String userId, @RequestParam("value") int value) {
+        Assert.notNull(userId, "error input");
+        log.info("deposit: {}", userId +":"+value);
+        return monitorService.broadcastToLeader("/raft/command", "DEPOSIT;"+userId+";"+value);
     }
 
     // WITHDRAW;userid;value
     @PostMapping(value = "/withdraw")
-    public Response<?> withdraw(@RequestBody Command command) {
-        Assert.notNull(command, "error input");
-        Assert.notNull(command.getUserId(), "error input");
-        Assert.notNull(command.getValue(), "error input");
-        log.info("withdraw: {}", command);
-        return monitorService.broadcastToLeader("/raft/command", "WITHDRAW;"+command.userId+";"+command.value);
+    public Response<?> withdraw(@RequestParam("userId") String userId, @RequestParam("value") int value) {
+        Assert.notNull(userId, "error input");
+        log.info("withdraw: {}", userId +":"+value);
+        return monitorService.broadcastToLeader("/raft/command", "WITHDRAW;"+userId+";"+value);
     }
-
 }

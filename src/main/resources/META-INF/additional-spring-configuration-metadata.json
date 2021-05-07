@@ -24,5 +24,10 @@
       "name": "cervidae.jraft.isMonitor",
       "type": "java.lang.Boolean",
       "description": "Description for cervidae.jraft.isMonitor."
+    },
+    {
+      "name": "cervidae.jraft.monitorUrl",
+      "type": "java.lang.String",
+      "description": "Description for cervidae.jraft.monitorUrl."
     }
   ] }

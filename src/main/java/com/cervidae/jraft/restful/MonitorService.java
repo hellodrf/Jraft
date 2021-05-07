@@ -1,7 +1,7 @@
 package com.cervidae.jraft.restful;
 
 import com.cervidae.jraft.async.AsyncService;
-import com.cervidae.jraft.node.RaftConfiguration;
+import com.cervidae.jraft.node.RaftConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
@@ -19,10 +19,10 @@ public class MonitorService {
      */
     final AsyncService asyncService;
     final RestClientService restClientService;
-    final RaftConfiguration config;
+    final RaftConfig config;
 
     @Autowired
-    public MonitorService(AsyncService asyncService, RestClientService restClientService, RaftConfiguration config) {
+    public MonitorService(AsyncService asyncService, RestClientService restClientService, RaftConfig config) {
         this.asyncService = asyncService;
         this.restClientService = restClientService;
         this.config = config;
@@ -42,14 +42,11 @@ public class MonitorService {
         for (String url: config.getClusteredUrls()) {
             try {
                 var response = restClientService.post(url + item, body);
-                System.out.println(response);
                 if (response.getSuccess() == 1) {
                     reply = response;
                     break;
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception ignored) {}
         }
         Assert.notNull(reply, "Reply is null?");
         return reply;
@@ -63,8 +60,10 @@ public class MonitorService {
     public List<String> broadcastForString(String item) {
         List<String> replies = new ArrayList<>();
         for (String url: config.getClusteredUrls()) {
-            System.out.println(url + item);
-            var response = restClientService.getForString(url + item);
+            String response = "TIME_OUT";
+            try {
+                response = restClientService.getForString(url + item);
+            } catch (Exception ignored) {}
             replies.add(response);
         }
         return replies;

@@ -1,10 +1,8 @@
 package com.cervidae.jraft.node;
 
 import com.cervidae.jraft.async.AsyncService;
-import com.cervidae.jraft.model.Account;
 import com.cervidae.jraft.msg.AppendEntriesRequest;
 import com.cervidae.jraft.msg.Message;
-import com.cervidae.jraft.msg.RequestVoteReply;
 import com.cervidae.jraft.msg.RequestVoteRequest;
 import com.cervidae.jraft.restful.RestClientService;
 import lombok.Data;
@@ -33,6 +31,7 @@ public class ClusteredRaftContext implements RaftContext {
     int id;
     RaftNode node;
     List<String> nodeURLs;
+    String monitorUrl;
     boolean running;
 
     /**
@@ -44,13 +43,14 @@ public class ClusteredRaftContext implements RaftContext {
 
     List<String> messageLogs = new ArrayList<>(1000);
 
-    public ClusteredRaftContext(AsyncService asyncService, RaftConfiguration config, RestClientService restClientService) {
+    public ClusteredRaftContext(AsyncService asyncService, RaftConfig config, RestClientService restClientService) {
         ClusteredRaftContext.log.info("ClusteredRaftContext created and starting");
         this.restClientService = restClientService;
         this.id = config.getClusteredId();
         this.asyncService = asyncService;
         this.nodeURLs = config.getClusteredUrls();
         this.clusterSize = config.getClusterSize();
+        this.monitorUrl = config.getMonitorUrl();
         this.running = false;
         if (this.id != -1) {
             this.node = config.getApplicationContext().getBean(RaftNode.class);
@@ -67,12 +67,16 @@ public class ClusteredRaftContext implements RaftContext {
         if (this.id == -1) return;
         this.running = true;
         this.node.start();
+        this.notifyMonitor("N"+id +" - ONLINE");
     }
 
     @Override
     public void shutdown() {
         this.running = false;
-        this.node.shutdown();
+        if (this.node != null) {
+            this.node.shutdown();
+        }
+        this.notifyMonitor("N"+id +" - OFFLINE");
     }
 
     @Override
@@ -83,19 +87,42 @@ public class ClusteredRaftContext implements RaftContext {
     @Override
     public Message sendMessage(int target, Message message) {
         if (message instanceof RequestVoteRequest) {
-            messageLogs.add("SND->" + target + "  " +message);
-            var reply = restClientService.sendRequestVote(nodeURLs.get(target),
-                    (RequestVoteRequest)message);
-            messageLogs.add(target + "->RCV  " + reply);
-            return reply;
+            try {
+                var reply = restClientService.sendRequestVote(nodeURLs.get(target),
+                        (RequestVoteRequest)message);
+                notifyMonitor("N" + message.getSource() + " -> N" + target + " : " +message);
+                notifyMonitor("N" + message.getSource() + " <- N" + target + " : " +reply);
+                return reply;
+            } catch (Exception e) {
+                notifyMonitor("N" + message.getSource() + " XX N" + target + " : " +message);
+                throw e;
+            }
         } else if (message instanceof AppendEntriesRequest) {
-            messageLogs.add("SND->" + target + "  " +message);
-            var reply = restClientService.sendAppendEntries(nodeURLs.get(target),
-                    (AppendEntriesRequest)message);
-            messageLogs.add(target + "->RCV  " + reply);
-            return reply;
+
+            try {
+                var reply = restClientService.sendAppendEntries(nodeURLs.get(target),
+                        (AppendEntriesRequest)message);
+                if (((AppendEntriesRequest) message).getEntries() != null) {
+                    notifyMonitor("N" + message.getSource() + " -> N" + target + " : " +message);
+                    notifyMonitor("N" + message.getSource() + " <- N" + target + " : " +reply);
+                }
+                return reply;
+            } catch (Exception e) {
+                if (((AppendEntriesRequest) message).getEntries() != null) {
+                    notifyMonitor("N" + message.getSource() + " XX N" + target + " : " +message);
+                }
+                throw e;
+            }
+
         }
         throw new IllegalArgumentException();
+    }
+
+    protected void notifyMonitor(String msg) {
+        try {
+            restClientService.post(monitorUrl + "/mon/event", msg);
+        } catch (Exception ignored) {}
+
     }
 
     @Override

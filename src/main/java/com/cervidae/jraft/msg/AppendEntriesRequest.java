@@ -46,6 +46,7 @@ public class AppendEntriesRequest extends Message {
         }
         this.leaderCommit = node.getLastApplied();
         this.entries = entries;
+        this.source = node.getId();
     }
 
     @Override

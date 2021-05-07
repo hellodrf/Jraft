@@ -46,7 +46,7 @@ public class RestClientService {
         return reply;
     }
 
-    public String getForString(String url) {
+    public String getForString(String url) throws ResourceAccessException {
         var reply = template.getForObject("http://" + url, String.class);
         Assert.notNull(reply, "Reply is null?");
         return reply;

@@ -1,9 +1,7 @@
 package com.cervidae.jraft.node;
 
 import com.cervidae.jraft.async.AsyncService;
-import com.cervidae.jraft.model.Account;
 import com.cervidae.jraft.msg.*;
-import com.cervidae.jraft.statemachine.ConcurrentHashMapKVService;
 import com.cervidae.jraft.statemachine.StateMachine;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
@@ -77,6 +75,10 @@ public class RaftNode implements Serializable {
                 }
             }, 0, node.config.HEARTBEAT_FREQUENCY);
             node.getLogger().info("Converting to leader and starting heartbeat");
+            if (node.context instanceof ClusteredRaftContext) {
+                ((ClusteredRaftContext) node.context).notifyMonitor("N" + node.id+" - I AM LEADER (TERM "
+                        +node.currentTerm.get() + ")");
+            }
         });
 
         final Consumer<RaftNode> from; // executed upon *transitioning FROM this state*
@@ -139,13 +141,13 @@ public class RaftNode implements Serializable {
     @JsonIgnore
     private RaftContext context;
     @JsonIgnore
-    private final RaftConfiguration config;
+    private final RaftConfig config;
 
     /**
      * Do not modify! Autowired by SpringIOC
      */
     @Autowired
-    public RaftNode(StateMachine stateMachine, AsyncService asyncService, RaftConfiguration config) {
+    public RaftNode(StateMachine stateMachine, AsyncService asyncService, RaftConfig config) {
         this.config = config;
         this.stateMachine = stateMachine;
         this.asyncService = asyncService;
@@ -176,6 +178,9 @@ public class RaftNode implements Serializable {
         }
     }
 
+    /**
+     * Destructor
+     */
     public void shutdown() {
         this.killed = true;
         timers.forEach((name, timer) -> timer.cancel());
@@ -301,7 +306,7 @@ public class RaftNode implements Serializable {
                         return;
                     }
                     getLogger().warn("Election failed, try starting a new election");
-                    Thread.sleep(200);
+                    Thread.sleep(ELECTION_DELAY);
                     if (this.state != State.CANDIDATE) {
                         return;
                     }
@@ -316,7 +321,7 @@ public class RaftNode implements Serializable {
                 if (incrementAndCheckVoteCount(voteCount, threshold)) {
                     return;
                 }
-                Thread.sleep(200);
+                Thread.sleep(ELECTION_DELAY);
                 if (this.state != State.CANDIDATE) {
                     return;
                 }

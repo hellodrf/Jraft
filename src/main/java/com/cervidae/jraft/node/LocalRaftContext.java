@@ -1,7 +1,6 @@
 package com.cervidae.jraft.node;
 
 import com.cervidae.jraft.async.AsyncService;
-import com.cervidae.jraft.model.Account;
 import com.cervidae.jraft.msg.Message;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
@@ -34,7 +33,7 @@ public class LocalRaftContext implements RaftContext {
     @JsonIgnore
     private final AsyncService asyncService;
 
-    public LocalRaftContext(AsyncService asyncService, RaftConfiguration config) {
+    public LocalRaftContext(AsyncService asyncService, RaftConfig config) {
         this.running = false;
         this.clusterSize = config.getClusterSize();
         this.asyncService = asyncService;
