@@ -1,6 +1,8 @@
 package com.cervidae.jraft.statemachine;
 
+import com.cervidae.jraft.bank.BankAccount;
 import com.cervidae.jraft.node.LogEntry;
+import com.cervidae.jraft.restful.Response;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -20,7 +22,7 @@ public class RedisKVService implements StateMachine {
     }
 
     @Override
-    public boolean apply(LogEntry entry) {
-        return false;
+    public Response<BankAccount> apply(LogEntry entry) {
+        return Response.fail();
     }
 }

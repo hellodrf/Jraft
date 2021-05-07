@@ -1,7 +1,9 @@
 package com.cervidae.jraft.node;
 
 import com.cervidae.jraft.async.AsyncService;
+import com.cervidae.jraft.bank.BankAccount;
 import com.cervidae.jraft.msg.*;
+import com.cervidae.jraft.restful.Response;
 import com.cervidae.jraft.statemachine.StateMachine;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
@@ -14,10 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -205,17 +204,38 @@ public class RaftNode implements Serializable {
         if (getState() != State.LEADER) {
             return -1;
         }
-        // DO Something
-        entry.term = this.currentTerm;
-        stateMachine.apply(entry);
-        AppendEntriesRequest message = new AppendEntriesRequest(entry);
+
+        this.logEntries.add(entry);
+
+        Response<BankAccount> clientResponse = stateMachine.apply(entry);
+
+        List<LogEntry> newEntries = new ArrayList<>();
+        newEntries.add(entry);
+
+        AppendEntriesRequest message = new AppendEntriesRequest(this, newEntries);
+
+        int successful = 1;
 
         for(int i=0; i <config.getClusterSize();i++){
             if(i == this.id) {
                 continue;
             }
-            context.sendMessage(i, message);
+            try {
+                AppendEntriesReply reply = (AppendEntriesReply) context.sendMessage(i, message);
+                if (reply.getSuccess()) {
+                    successful += 1;
+                }
+            } catch (TimeoutException e) {
+                e.printStackTrace();
+            }
         }
+
+        if (successful > config.getClusterSize() / 2) {
+            lastApplied += 1;
+        }
+
+
+
         return 0;
     }
 
@@ -325,7 +345,7 @@ public class RaftNode implements Serializable {
                 try {
                     getLogger().debug("Sending heartbeat to N" + finalI);
                     var reply = (AppendEntriesReply) context.sendMessage(finalI, msg);
-                    if (!reply.isSuccess()) {
+                    if (!reply.getSuccess()) {
                         getLogger().warn("Heartbeat rejected by N" + finalI);
                     } else {
                         getLogger().info("Heartbeat accepted by N" + finalI);
