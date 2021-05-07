@@ -2,8 +2,6 @@ package com.cervidae.jraft.restful;
 
 import com.cervidae.jraft.async.AsyncService;
 import com.cervidae.jraft.node.RaftConfiguration;
-import com.cervidae.jraft.restful.Response;
-import com.cervidae.jraft.restful.RestClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
@@ -42,13 +40,18 @@ public class MonitorService {
     public <T> Response<?> broadcastToLeader(String item, T body) {
         Response<?> reply = null;
         for (String url: config.getClusteredUrls()) {
-            var response = restClientService.request(url + item, body);
-            if (response.getSuccess() == 1) {
-                reply = response;
-                break;
+            try {
+                var response = restClientService.post(url + item, body);
+                System.out.println(response);
+                if (response.getSuccess() == 1) {
+                    reply = response;
+                    break;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
-        Assert.notNull(reply, "reply is null?");
+        Assert.notNull(reply, "Reply is null?");
         return reply;
     }
 

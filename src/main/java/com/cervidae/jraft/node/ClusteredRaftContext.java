@@ -58,7 +58,7 @@ public class ClusteredRaftContext implements RaftContext {
     }
 
     @Override
-    public int newEntry(LogEntry entry) {
+    public int newEntry(String entry) {
         return 0;
     }
 
@@ -103,13 +103,4 @@ public class ClusteredRaftContext implements RaftContext {
         return new ArrayList<>(Collections.singletonList(node));
     }
 
-    @Override
-    public Account getAccount(String userId) {
-        return null;
-    }
-
-    @Override
-    public RaftNode getLeader() {
-        return null;
-    }
 }

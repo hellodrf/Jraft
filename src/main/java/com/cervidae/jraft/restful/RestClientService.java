@@ -40,7 +40,7 @@ public class RestClientService {
         return reply;
     }
 
-    public Response<?> request(String url, Object body) {
+    public Response<?> post(String url, Object body) throws ResourceAccessException {
         var reply = template.postForObject("http://" + url, body, Response.class);
         Assert.notNull(reply, "Reply is null?");
         return reply;

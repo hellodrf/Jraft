@@ -51,7 +51,7 @@ public class ServerExceptionHandler {
      */
     @ExceptionHandler(UnsatisfiedServletRequestParameterException.class)
     public Response<?> unsatisfiedServletRequestParameterExceptionHandler(Exception e) {
-        return Response.fail("1006");
+        return Response.fail(e.getMessage());
     }
 
     /**

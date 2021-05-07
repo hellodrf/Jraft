@@ -22,4 +22,17 @@ public class ConcurrentHashMapKVService implements StateMachine {
     public boolean apply(LogEntry entry) {
         return true;
     }
+
+    @Override
+    public int query(String key) {
+        if (!storage.containsKey(key)) {
+            throw new IllegalArgumentException();
+        }
+        var val = storage.get(key);
+        if (val != null) {
+            return val;
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
 }

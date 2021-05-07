@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Command {
-    public String operate;
     public String userId;
-    public String number;
+    public String value;
 }

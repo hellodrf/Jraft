@@ -165,7 +165,6 @@ public class RaftNode implements Serializable {
         this.id = context.getMyID(this);
         this.lastHeartbeat = System.currentTimeMillis();
         getLogger().info("Node " + this.id + " initialised, waiting for election timer");
-        //State.FOLLOWER.to.accept(this);
         try {
             Thread.sleep(ELECTION_DELAY);
         } catch (InterruptedException ignored) {
@@ -207,37 +206,12 @@ public class RaftNode implements Serializable {
      * @param entry log entry
      * @return promised entry index
      */
-    public int newEntry(LogEntry entry) {
+    public int newEntry(String entry) {
         if (getState() != State.LEADER) {
             return -1;
         }
         // DO Something
         return 0;
-    }
-
-
-    /**
-     *
-     * @param userId
-     * @return
-     */
-    public Account getAccount(String userId){
-        if (getState() != State.LEADER) {
-            return null;
-        }
-
-        if (stateMachine instanceof ConcurrentHashMapKVService) {
-            if(!((ConcurrentHashMapKVService) stateMachine).getStorage().containsKey(userId)){
-                return null;
-            }
-            Account account = new Account();
-            account.setUserId(userId);
-            account.setNumber(((ConcurrentHashMapKVService) stateMachine).getStorage().get(userId).toString());
-            return account;
-        }
-
-        return null;
-
     }
 
     /**

@@ -1,12 +1,6 @@
 package com.cervidae.jraft.restful;
 
-import com.alibaba.fastjson.JSON;
-import com.cervidae.jraft.model.Account;
-import com.cervidae.jraft.model.Command;
-import com.cervidae.jraft.node.LocalRaftContext;
-import com.cervidae.jraft.node.LogEntry;
-import com.cervidae.jraft.node.RaftContext;
-import com.cervidae.jraft.node.RaftNode;
+import com.cervidae.jraft.node.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
@@ -16,9 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 import java.util.List;
 
@@ -78,90 +71,53 @@ public class RaftController implements ApplicationContextAware {
         return context.getMessageLogs();
     }
 
-    @GetMapping(value = "/check_balance")
-    public Response<?> checkBalance(@RequestParam("userId") String userId) {
-        if(userId == null){
-            return Response.fail("user does not exist");
+    @PostMapping(value = "/query")
+    public Response<?> query(@RequestBody String id) {
+        log.info("Query recv: " + id);
+        RaftNode node = null;
+        if (context instanceof ClusteredRaftContext) {
+            node = ((ClusteredRaftContext) context).getNode();
+        } else {
+            node = getLeader();
         }
+        Assert.notNull(node, "Node is null?");
+        int reply;
+        try {
+            reply = node.getStateMachine().query(id);
+        } catch (IllegalArgumentException e) {
+            return Response.success("entry do not exist");
+        }
+        System.out.println(reply);
+        return Response.success(Integer.toString(reply));
+    }
 
-        log.info("check balance : {}", userId);
-        Account account = context.getAccount(userId);
-        if(account==null){
-            return Response.fail("user does not exist");
-        }else {
-            return Response.success(account);
+    @PostMapping(value = "/command")
+    public Response<?> command(@RequestBody String command) {
+        log.info("Command recv: " + command);
+        RaftNode node = getLeader();
+        if (node == null || node.getState() != RaftNode.State.LEADER) {
+            log.info("I am not leader, discarding command");
+            return Response.fail("not_leader");
+        } else {
+            return Response.success(Integer.toString(node.newEntry(command)));
         }
     }
 
-    @PostMapping(value = "/create_account")
-    public Response<?> createAccount(@RequestBody Map<String, Object> requestMap) {
-        if(requestMap == null){
-            return Response.fail("error input");
-        }
-
-        Command command = JSON.parseObject(JSON.toJSONString(requestMap),Command.class);
-        if(command.getUserId() == null || command.getOperate() == null){
-            return Response.fail("userId null");
-        }
-
-        Account account = context.getAccount(command.getUserId());
-        if(account!=null){
-            return Response.fail("user exists");
-        }else {
-            LogEntry logEntry = new LogEntry(context.getLeader().getCurrentTerm().intValue(),command);
-            if(-1 == context.newEntry(logEntry)){
-                return Response.fail("server error");
+    private RaftNode getLeader() {
+        if (context instanceof ClusteredRaftContext) {
+            var node = context.getNodes().get(0);
+            if (node.getState() == RaftNode.State.LEADER) {
+                return node;
+            } else {
+                return null;
             }
-            return Response.success("account created");
-        }
-    }
-
-
-    @PostMapping(value = "/deposit")
-    public Response<?> deposit(@RequestBody Map<String, Object> requestMap) {
-        if(requestMap == null){
-            return Response.fail("error input");
-        }
-
-        Command command = JSON.parseObject(JSON.toJSONString(requestMap),Command.class);
-        if(command.getUserId() == null || command.getOperate() ==null || command.getNumber() == null){
-            return Response.fail("userId null");
-        }
-
-        Account account = context.getAccount(command.getUserId());
-        if(account==null){
-            return Response.fail("user does not exist");
-        }else {
-            LogEntry logEntry = new LogEntry(context.getLeader().getCurrentTerm().intValue(),command);
-            if(-1 == context.newEntry(logEntry)){
-                return Response.fail("server error");
+        } else {
+            for (RaftNode n: context.getNodes()) {
+                if (n.getState() == RaftNode.State.LEADER) {
+                    return n;
+                }
             }
-            return Response.success("deposit done");
         }
+        return null;
     }
-
-
-    @PostMapping(value = "/withdraw")
-    public Response<?> withdraw(@RequestBody Map<String, Object> requestMap) {
-        if(requestMap == null){
-            return Response.fail("error input");
-        }
-
-        Command command = JSON.parseObject(JSON.toJSONString(requestMap),Command.class);
-        if(command.getUserId() == null || command.getOperate() ==null || command.getNumber() == null){
-            return Response.fail("userId null");
-        }
-
-        Account account = context.getAccount(command.getUserId());
-        if(account==null){
-            return Response.fail("user does not exist");
-        }else {
-            LogEntry logEntry = new LogEntry(context.getLeader().getCurrentTerm().intValue(),command);
-            if(-1 == context.newEntry(logEntry)){
-                return Response.fail("server error");
-            }
-            return Response.success("withdraw done");
-        }
-    }
-
 }

@@ -6,4 +6,6 @@ public interface StateMachine {
 
     boolean apply(LogEntry entry);
 
+    int query(String key);
+
 }

@@ -23,4 +23,9 @@ public class RedisKVService implements StateMachine {
     public boolean apply(LogEntry entry) {
         return false;
     }
+
+    @Override
+    public int query(String key) {
+        return 0;
+    }
 }

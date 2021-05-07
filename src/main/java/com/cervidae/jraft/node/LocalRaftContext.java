@@ -61,7 +61,7 @@ public class LocalRaftContext implements RaftContext {
     }
 
     @Override
-    public int newEntry(LogEntry entry) {
+    public int newEntry(String entry) {
         for (RaftNode node: nodes) {
             var index = node.newEntry(entry);
             if (index != -1) {
@@ -69,26 +69,6 @@ public class LocalRaftContext implements RaftContext {
             }
         }
         return -1;
-    }
-    @Override
-    public Account getAccount(String userId){
-        for (RaftNode node: nodes) {
-            Account account = node.getAccount(userId);
-            if (account != null) {
-                return account;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public RaftNode getLeader(){
-        for (RaftNode node: nodes) {
-            if(node.getState() == RaftNode.State.LEADER){
-                return node;
-            }
-        }
-        return null;
     }
 
     @Override
