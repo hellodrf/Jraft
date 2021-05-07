@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Remote" type="CompoundRunConfigurationType">
+    <toRun name="Remote 2" type="SpringBootApplicationConfigurationType" />
+    <toRun name="Monitor" type="SpringBootApplicationConfigurationType" />
+    <toRun name="Remote 1" type="SpringBootApplicationConfigurationType" />
+    <toRun name="Remote 0" type="SpringBootApplicationConfigurationType" />
+    <method v="2" />
+  </configuration>
+</component>

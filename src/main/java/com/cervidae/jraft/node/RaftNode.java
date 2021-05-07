@@ -223,7 +223,7 @@ public class RaftNode implements Serializable {
             getLogger().info("Election finalised, I am leader of term " + getCurrentTerm().get());
             return true;
         } else if (this.state != State.CANDIDATE) {
-            getLogger().warn("I am not Candidate? Cannot perform vote check");
+            getLogger().debug("I am not Candidate? Cannot perform vote check");
         }
         return false;
     }
@@ -277,7 +277,7 @@ public class RaftNode implements Serializable {
                             return;
                         }
                         if (this.killed || this.state != State.CANDIDATE) {
-                            getLogger().warn("I am not Candidate? Cannot process votes");
+                            getLogger().debug("I am not Candidate? Cannot process votes");
                             return;
                         }
                         if (reply.isVoteGranted()) {
@@ -410,7 +410,7 @@ public class RaftNode implements Serializable {
         if (this.currentTerm.get() < msg.getTerm()) {
             if (state != State.FOLLOWER) {
                 getLogger().info(msg.getType() + " RPC from N" + msg.getLeaderID() + " has term " + msg.getTerm() +
-                        " > my term " + this.getCurrentTerm().get() + ", converting to follower");
+                        " > my term " + this.getCurrentTerm().get());
             }
             this.currentTerm.set(msg.getTerm());
         } else if (this.currentTerm.get() > msg.getTerm()) {

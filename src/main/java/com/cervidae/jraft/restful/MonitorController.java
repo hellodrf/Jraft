@@ -36,6 +36,7 @@ public class MonitorController {
         return monitorService.broadcastToLeader("/raft/query", userId);
     }
 
+    // CREATE;userid
     @PostMapping(value = "/create_account")
     public Response<?> createAccount(@RequestParam("userId") String userId) {
         Assert.notNull(userId, "error input");
@@ -43,23 +44,23 @@ public class MonitorController {
         return monitorService.broadcastToLeader("/raft/command", "CREATE;"+userId);
     }
 
-
+    // DEPOSIT;userid;value
     @PostMapping(value = "/deposit")
     public Response<?> deposit(@RequestBody Command command) {
         Assert.notNull(command, "error input");
         Assert.notNull(command.getUserId(), "error input");
         log.info("deposit: {}", command);
-        return monitorService.broadcastToLeader("/raft/command", "deposit;"+command.userId+";"+command.value);
+        return monitorService.broadcastToLeader("/raft/command", "DEPOSIT;"+command.userId+";"+command.value);
     }
 
-
+    // WITHDRAW;userid;value
     @PostMapping(value = "/withdraw")
     public Response<?> withdraw(@RequestBody Command command) {
         Assert.notNull(command, "error input");
         Assert.notNull(command.getUserId(), "error input");
         Assert.notNull(command.getValue(), "error input");
         log.info("withdraw: {}", command);
-        return monitorService.broadcastToLeader("/raft/command", "withdraw;"+command.userId+";"+command.value);
+        return monitorService.broadcastToLeader("/raft/command", "WITHDRAW;"+command.userId+";"+command.value);
     }
 
 }
