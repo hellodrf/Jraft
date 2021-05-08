@@ -7,13 +7,13 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 
 
 @RestController
@@ -74,7 +74,7 @@ public class RaftController implements ApplicationContextAware {
     @PostMapping(value = "/query")
     public Response<?> query(@RequestBody String id) {
         log.info("Query recv: " + id);
-        RaftNode node = null;
+        RaftNode node;
         if (context instanceof ClusteredRaftContext) {
             node = ((ClusteredRaftContext) context).getNode();
         } else {
@@ -87,7 +87,7 @@ public class RaftController implements ApplicationContextAware {
         } catch (IllegalArgumentException e) {
             return Response.success("entry do not exist");
         }
-        System.out.println(reply);
+        log.info("Query reply: " + reply);
         return Response.success(Integer.toString(reply));
     }
 
@@ -119,5 +119,31 @@ public class RaftController implements ApplicationContextAware {
             }
         }
         return null;
+    }
+
+    @PostMapping(value = "/sm")
+    public Response<?> smPost(@RequestParam("k") String key, @RequestParam("v") int value) {
+        RaftNode node;
+        if (context instanceof ClusteredRaftContext) {
+            node = ((ClusteredRaftContext) context).getNode();
+        } else {
+            node = getLeader();
+        }
+        Assert.notNull(node, "node not found?");
+        var sm = node.getStateMachine();
+        return Response.success(sm.put(key, value));
+    }
+
+    @GetMapping(value = "/sm")
+    public Response<?> smGet(@RequestParam("k") String key) {
+        RaftNode node;
+        if (context instanceof ClusteredRaftContext) {
+            node = ((ClusteredRaftContext) context).getNode();
+        } else {
+            node = getLeader();
+        }
+        Assert.notNull(node, "node not found?");
+        var sm = node.getStateMachine();
+        return Response.success(sm.query(key));
     }
 }

@@ -35,4 +35,10 @@ public class ConcurrentHashMapKVService implements StateMachine {
             throw new IllegalArgumentException();
         }
     }
+
+    @Override
+    public int put(String key, int value) {
+        storage.put(key, value);
+        return storage.getOrDefault(key, 0);
+    }
 }

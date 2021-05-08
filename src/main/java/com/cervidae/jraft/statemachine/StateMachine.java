@@ -8,4 +8,6 @@ public interface StateMachine {
 
     int query(String key);
 
+    int put(String key, int value);
+
 }
