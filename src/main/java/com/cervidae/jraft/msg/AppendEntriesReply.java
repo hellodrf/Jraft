@@ -18,6 +18,10 @@ public class AppendEntriesReply extends Message {
     @NonNull
     boolean success;
 
+    public boolean getSuccess() {
+        return success;
+    }
+
     @Override
     public String toString() {
         return "AppendEntriesReply{" +

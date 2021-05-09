@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Data
 @AllArgsConstructor
@@ -15,6 +16,6 @@ public class LogEntry implements Serializable {
 
     int term;
 
-    Object command;
+    String command;
 
 }
