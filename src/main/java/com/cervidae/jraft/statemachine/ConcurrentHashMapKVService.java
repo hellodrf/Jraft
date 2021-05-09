@@ -22,17 +22,6 @@ public class ConcurrentHashMapKVService implements StateMachine {
         this.storage = new ConcurrentHashMap<>();
     }
 
-    public String[] processEntry(LogEntry entry) {
-        String command = entry.getCommand();
-        String[] processedEntry = command.split(":");
-        if (processedEntry.length != 3) {
-            if(!processedEntry[1].equals("balance") || processedEntry.length != 2) {
-                return null;
-            }
-        }
-        return processedEntry;
-    }
-
     public Response<BankAccount> apply(LogEntry entry) {
         String[] processedEntry = processEntry(entry);
         if (processedEntry == null) {
@@ -42,7 +31,7 @@ public class ConcurrentHashMapKVService implements StateMachine {
         accountID = processedEntry[0];
         action = processedEntry[1];
 
-        if (action.equals("deposit") || action.equals("withdraw")) {
+        if (action.equals("DEPOSIT") || action.equals("WITHDRAW")) {
             if (processedEntry.length != 3) {
                 return Response.fail();
             }
@@ -53,17 +42,28 @@ public class ConcurrentHashMapKVService implements StateMachine {
                 return Response.fail();
             }
 
-            if (action.equals("deposit")){
+            if (action.equals("DEPOSIT")){
                 return applyDeposit(accountID, amount);
             } else {
                 return applyWithdraw(accountID, amount);
             }
-        } else if (action.equals("checkBalance")) {
+        } else if (action.equals("BALANCE")) {
             return applyCheckBalance(accountID);
-        } else if (action.equals("createAccount")) {
+        } else if (action.equals("CREATE")) {
             return applyCreateAccount(accountID);
         }
         return Response.fail();
+    }
+
+    private String[] processEntry(LogEntry entry) {
+        String command = entry.getCommand();
+        String[] processedEntry = command.split(";");
+        if (processedEntry.length != 3) {
+            if(!processedEntry[1].equals("BALANCE") || processedEntry.length != 2) {
+                return null;
+            }
+        }
+        return processedEntry;
     }
 
     public Response<BankAccount> applyCreateAccount(String accountID) {
@@ -97,6 +97,11 @@ public class ConcurrentHashMapKVService implements StateMachine {
         return Response.success(new BankAccount(accountID, storage.get(accountID)));
     }
 
+    /**
+     * CAN BE REMOVED.
+     * @param accountID
+     * @return
+     */
     public Response<BankAccount> applyCheckBalance(String accountID) {
 
         if (!storage.containsKey(accountID)) {
@@ -105,6 +110,4 @@ public class ConcurrentHashMapKVService implements StateMachine {
 
         return Response.success(new BankAccount(accountID, storage.get(accountID)));
     }
-
-
 }

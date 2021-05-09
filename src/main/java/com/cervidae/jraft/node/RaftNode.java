@@ -112,6 +112,7 @@ public class RaftNode implements Serializable {
 
     private int currentLeader = -1;
     private int currentLeadingTerm = -1;
+    private int lastCommitted = -1;
 
     /**
      * Locks
@@ -200,14 +201,14 @@ public class RaftNode implements Serializable {
      * @param entry log entry
      * @return promised entry index
      */
-    public int newEntry(LogEntry entry) {
+    public Response<BankAccount> newEntry(LogEntry entry) {
         if (getState() != State.LEADER) {
-            return -1;
+            return Response.fail();
         }
 
         this.logEntries.add(entry);
 
-        Response<BankAccount> clientResponse = stateMachine.apply(entry);
+
 
         List<LogEntry> newEntries = new ArrayList<>();
         newEntries.add(entry);
@@ -232,11 +233,10 @@ public class RaftNode implements Serializable {
 
         if (successful > config.getClusterSize() / 2) {
             lastApplied += 1;
+            return stateMachine.apply(entry);
         }
 
-
-
-        return 0;
+        return Response.fail();
     }
 
     /**
@@ -439,7 +439,12 @@ public class RaftNode implements Serializable {
             return reply;
         }
 
-        // do log stuff here
+        this.logEntries.addAll(msg.getEntries());
+
+        if(msg.getLeaderCommit() > lastApplied) {
+            stateMachine.apply(logEntries.get(lastApplied));
+            this.lastApplied += 1;
+        }
 
         return reply;
     }
