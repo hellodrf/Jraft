@@ -68,4 +68,9 @@ public class MonitorController {
         log.info("withdraw: {}", userId +":"+value);
         return monitorService.broadcastToLeader("/raft/command", "WITHDRAW;"+userId+";"+value);
     }
+
+    @GetMapping(value = "consensus")
+    public List<String> check_consensus() {
+        return monitorService.broadcastForString("/raft/log");
+    }
 }

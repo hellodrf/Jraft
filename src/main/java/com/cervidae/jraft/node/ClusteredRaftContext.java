@@ -1,11 +1,9 @@
 package com.cervidae.jraft.node;
 
 import com.cervidae.jraft.async.AsyncService;
-import com.cervidae.jraft.bank.BankAccount;
 import com.cervidae.jraft.msg.AppendEntriesRequest;
 import com.cervidae.jraft.msg.Message;
 import com.cervidae.jraft.msg.RequestVoteRequest;
-import com.cervidae.jraft.restful.Response;
 import com.cervidae.jraft.restful.RestClientService;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
