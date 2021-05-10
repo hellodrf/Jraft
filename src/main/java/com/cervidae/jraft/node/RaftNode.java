@@ -129,6 +129,8 @@ public class RaftNode implements Serializable {
      */
     @JsonIgnore
     private final ReadWriteLock electionMutex = new ReentrantReadWriteLock();
+    private final ReadWriteLock appendEntriesLock = new ReentrantReadWriteLock();
+
 
     /**
      * Timers
@@ -222,16 +224,12 @@ public class RaftNode implements Serializable {
             return -1;
         }
 
-        LogEntry entry = new LogEntry(cmd, this.getCurrentTerm().get());
+        LogEntry entry = new LogEntry(cmd, this.getCurrentTerm().get(), this.logEntries.size());
 
         this.logEntries.add(entry);
 
-
-
         List<LogEntry> newEntries = new ArrayList<>();
         newEntries.add(entry);
-
-        AppendEntriesRequest message = new AppendEntriesRequest(this, newEntries);
 
         int successful = 1;
 
@@ -239,23 +237,31 @@ public class RaftNode implements Serializable {
             if(i == this.id) {
                 continue;
             }
-            try {
-                AppendEntriesReply reply = (AppendEntriesReply) context.sendMessage(i, message);
-                if (reply.getSuccess()) {
-                    successful += 1;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            successful += this.sendEntries(i, newEntries);
+
         }
 
         if (successful > config.getClusterSize() / 2) {
+            lastCommitted += 1;
             lastApplied += 1;
             stateMachine.apply(entry);
-            return this.lastApplied;
+            return this.lastCommitted;
         }
 
         return -1;
+    }
+
+    private int sendEntries(int target, List<LogEntry> entries) {
+        AppendEntriesRequest message = new AppendEntriesRequest(this, entries);
+        int successful = 0;
+        try {
+            AppendEntriesReply reply = (AppendEntriesReply) context.sendMessage(target, message);
+            if (reply.getSuccess()) {
+                successful = 1;
+            }
+        } catch (Exception e) {
+        }
+        return successful;
     }
 
     /**
@@ -392,12 +398,29 @@ public class RaftNode implements Serializable {
                         this.state.transition(State.FOLLOWER, this);
                     } else {
                         getLogger().info("Heartbeat accepted by N" + finalI);
+                        if(appendEntriesLock.writeLock().tryLock()) {
+                            checkFollowerHasAllLogs(finalI, reply.getNextIndex());
+                        }
                     }
                 } catch (ResourceAccessException e) {
                     getLogger().warn("Heartbeat RPC to N" + finalI + " timed out?");
                 }
             });
         }
+    }
+
+    private void checkFollowerHasAllLogs(int target, int nextIndex) {
+        try {
+            if (logEntries.size() > nextIndex) {
+                this.sendEntries(target, this.logEntries.subList(nextIndex, logEntries.size()));
+                Thread.sleep(200);
+                System.out.println("SENT ENTRIES TO FOLLOWER FROM HEARTBEAT");
+            }
+        } catch (InterruptedException e) {
+        } finally {
+            appendEntriesLock.writeLock().unlock();
+        }
+
     }
 
     /**
@@ -448,7 +471,7 @@ public class RaftNode implements Serializable {
      * @return reply msg
      */
     public AppendEntriesReply appendEntriesHandler(AppendEntriesRequest msg) {
-        var reply = new AppendEntriesReply(this.getCurrentTerm().get(), false);
+        var reply = new AppendEntriesReply(this.getCurrentTerm().get(), false, this.logEntries.size());
 
         // Validate rpc
         if (this.currentTerm.get() < msg.getTerm()) {
@@ -475,12 +498,22 @@ public class RaftNode implements Serializable {
         }
 
         if (msg.getEntries() != null) {
-            this.logEntries.addAll(msg.getEntries());
+            for (LogEntry entry : msg.getEntries()) {
+                if(entry.getIndex() == this.logEntries.size()) {
+                    this.logEntries.add(entry);
+                }
+            }
+            for(LogEntry entry : this.logEntries) {
+                System.out.println(entry);
+            }
+            System.out.println("LAST APPLIED = " + lastCommitted);
+            System.out.println("LEADER COMMIT = " + msg.getLeaderCommit());
         }
 
-        if(msg.getLeaderCommit() > lastApplied) {
-            stateMachine.apply(logEntries.get(msg.getLeaderCommit()));
-            this.lastApplied = msg.getLeaderCommit();
+
+        if(msg.getLeaderCommit() > lastCommitted && logEntries.size() > msg.getLeaderCommit()) {
+            this.lastCommitted += 1;
+            stateMachine.apply(logEntries.get(lastCommitted));
         }
 
         if (msg.getEntries() == null) {

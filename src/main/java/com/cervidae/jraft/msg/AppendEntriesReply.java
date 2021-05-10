@@ -18,6 +18,9 @@ public class AppendEntriesReply extends Message {
     @NonNull
     boolean success;
 
+    @NonNull
+    int nextIndex;
+
     public boolean getSuccess() {
         return success;
     }

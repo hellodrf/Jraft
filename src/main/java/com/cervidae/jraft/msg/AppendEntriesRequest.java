@@ -44,7 +44,7 @@ public class AppendEntriesRequest extends Message {
             this.prevLogIndex = node.getLogEntries().size()-1;
             this.prevLogTerm = node.getLogEntries().get(node.getLogEntries().size()-1).getTerm();
         }
-        this.leaderCommit = node.getLastApplied();
+        this.leaderCommit = node.getLastCommitted();
         this.entries = entries;
         this.source = node.getId();
     }

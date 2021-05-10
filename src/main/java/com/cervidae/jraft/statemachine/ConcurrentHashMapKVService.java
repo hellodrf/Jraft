@@ -4,11 +4,13 @@ import com.cervidae.jraft.bank.BankAccount;
 import com.cervidae.jraft.node.LogEntry;
 import com.cervidae.jraft.restful.Response;
 import lombok.Data;
+import lombok.extern.java.Log;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,6 +24,12 @@ public class ConcurrentHashMapKVService implements StateMachine {
 
     public ConcurrentHashMapKVService() {
         this.storage = new ConcurrentHashMap<>();
+    }
+
+    public void applyAll(List<LogEntry> entries) {
+        for (LogEntry entry : entries) {
+            this.apply(entry);
+        }
     }
 
     public Response<BankAccount> apply(LogEntry entry) {
