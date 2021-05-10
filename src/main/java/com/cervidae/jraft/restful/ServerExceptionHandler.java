@@ -24,6 +24,7 @@ public class ServerExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public Response<?> allExceptionHandler(Exception e) {
+        e.printStackTrace();
         Logger.getGlobal().severe("Unexpected exception caught: " + e.getClass().getName());
         return Response.fail(e.getMessage());
     }

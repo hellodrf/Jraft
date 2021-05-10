@@ -214,13 +214,15 @@ public class RaftNode implements Serializable {
     /**
      * Push a new log entry to consensus
      *
-     * @param entry log entry
+     * @param cmd command to be executed
      * @return promised entry index
      */
-    public Response<BankAccount> newEntry(LogEntry entry) {
+    public int newEntry(String cmd) {
         if (getState() != State.LEADER) {
-            return Response.fail();
+            return -1;
         }
+
+        LogEntry entry = new LogEntry(cmd, this.getCurrentTerm().get());
 
         this.logEntries.add(entry);
 
@@ -242,17 +244,18 @@ public class RaftNode implements Serializable {
                 if (reply.getSuccess()) {
                     successful += 1;
                 }
-            } catch (TimeoutException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
         if (successful > config.getClusterSize() / 2) {
             lastApplied += 1;
-            return stateMachine.apply(entry);
+            stateMachine.apply(entry);
+            return this.lastApplied;
         }
 
-        return Response.fail();
+        return -1;
     }
 
     /**
@@ -470,16 +473,19 @@ public class RaftNode implements Serializable {
             getLogger().debug("Valid AppendEntries RPC received from N" + msg.getLeaderID()
                     + ", converting to follower");
         }
+
+        if (msg.getEntries() != null) {
+            this.logEntries.addAll(msg.getEntries());
+        }
+
+        if(msg.getLeaderCommit() > lastApplied) {
+            stateMachine.apply(logEntries.get(msg.getLeaderCommit()));
+            this.lastApplied = msg.getLeaderCommit();
+        }
+
         if (msg.getEntries() == null) {
             getLogger().debug("Heartbeat received from N" + msg.getLeaderID());
             return reply;
-        }
-
-        this.logEntries.addAll(msg.getEntries());
-
-        if(msg.getLeaderCommit() > lastApplied) {
-            stateMachine.apply(logEntries.get(lastApplied));
-            this.lastApplied += 1;
         }
 
         return reply;

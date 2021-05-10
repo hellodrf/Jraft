@@ -1,9 +1,11 @@
 package com.cervidae.jraft.node;
 
 import com.cervidae.jraft.async.AsyncService;
+import com.cervidae.jraft.bank.BankAccount;
 import com.cervidae.jraft.msg.AppendEntriesRequest;
 import com.cervidae.jraft.msg.Message;
 import com.cervidae.jraft.msg.RequestVoteRequest;
+import com.cervidae.jraft.restful.Response;
 import com.cervidae.jraft.restful.RestClientService;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -58,8 +60,8 @@ public class ClusteredRaftContext implements RaftContext {
     }
 
     @Override
-    public int newEntry(String entry) {
-        return 0;
+    public int newEntry(String cmd) {
+        return node.newEntry(cmd);
     }
 
     @Override

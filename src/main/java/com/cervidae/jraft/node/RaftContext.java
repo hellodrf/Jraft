@@ -1,6 +1,8 @@
 package com.cervidae.jraft.node;
 
+import com.cervidae.jraft.bank.BankAccount;
 import com.cervidae.jraft.msg.Message;
+import com.cervidae.jraft.restful.Response;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.util.List;
@@ -13,7 +15,7 @@ public interface RaftContext {
 
     int getMyID(RaftNode node);
 
-    int newEntry(String entry);
+    int newEntry(String cmd);
 
     boolean isRunning();
 

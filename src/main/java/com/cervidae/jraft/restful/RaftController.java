@@ -13,7 +13,6 @@ import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 
 
 @RestController
@@ -99,7 +98,7 @@ public class RaftController implements ApplicationContextAware {
             log.info("I am not leader, discarding command");
             return Response.fail("not_leader");
         } else {
-            return Response.success(Integer.toString(node.newEntry(command)));
+            return Response.success(node.newEntry(command));
         }
     }
 

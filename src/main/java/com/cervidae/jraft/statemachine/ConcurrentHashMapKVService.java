@@ -4,6 +4,7 @@ import com.cervidae.jraft.bank.BankAccount;
 import com.cervidae.jraft.node.LogEntry;
 import com.cervidae.jraft.restful.Response;
 import lombok.Data;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Data
 @Service
+@Primary
 @Scope("prototype")
 public class ConcurrentHashMapKVService implements StateMachine {
 
@@ -28,8 +30,8 @@ public class ConcurrentHashMapKVService implements StateMachine {
             return Response.fail();
         }
         String accountID, action;
-        accountID = processedEntry[0];
-        action = processedEntry[1];
+        action = processedEntry[0];
+        accountID = processedEntry[1];
 
         if (action.equals("DEPOSIT") || action.equals("WITHDRAW")) {
             if (processedEntry.length != 3) {
@@ -58,11 +60,13 @@ public class ConcurrentHashMapKVService implements StateMachine {
     private String[] processEntry(LogEntry entry) {
         String command = entry.getCommand();
         String[] processedEntry = command.split(";");
-        if (processedEntry.length != 3) {
-            if(!processedEntry[1].equals("BALANCE") || processedEntry.length != 2) {
+
+        // Need to test node crashes too. Stop it - do request before and after stopping node. (Both followers and leaders). Restart as well to see if it gets all logs.
+        /*if (processedEntry.length != 3) {
+            if((!processedEntry[1].equals("BALANCE") && !processedEntry[1].equals("CREATE")) || processedEntry.length != 2) {
                 return null;
             }
-        }
+        }*/
         return processedEntry;
     }
 
@@ -117,6 +121,7 @@ public class ConcurrentHashMapKVService implements StateMachine {
             throw new IllegalArgumentException();
         }
         var val = storage.get(key);
+
         if (val != null) {
             return val;
         } else {

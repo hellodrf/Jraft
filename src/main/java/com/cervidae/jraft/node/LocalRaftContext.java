@@ -1,7 +1,9 @@
 package com.cervidae.jraft.node;
 
 import com.cervidae.jraft.async.AsyncService;
+import com.cervidae.jraft.bank.BankAccount;
 import com.cervidae.jraft.msg.Message;
+import com.cervidae.jraft.restful.Response;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -60,9 +62,9 @@ public class LocalRaftContext implements RaftContext {
     }
 
     @Override
-    public int newEntry(String entry) {
+    public int newEntry(String cmd) {
         for (RaftNode node: nodes) {
-            var index = node.newEntry(entry);
+            var index = node.newEntry(cmd);
             if (index != -1) {
                 return index;
             }

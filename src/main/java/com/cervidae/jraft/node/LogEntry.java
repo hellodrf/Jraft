@@ -18,4 +18,7 @@ public class LogEntry implements Serializable {
 
     String command;
 
+    public LogEntry(String command, int term) {
+        this.command = command;
+    }
 }
