@@ -414,7 +414,6 @@ public class RaftNode implements Serializable {
             if (logEntries.size() > nextIndex) {
                 this.sendEntries(target, this.logEntries.subList(nextIndex, logEntries.size()));
                 Thread.sleep(200);
-                System.out.println("SENT ENTRIES TO FOLLOWER FROM HEARTBEAT");
             }
         } catch (InterruptedException e) {
         } finally {
@@ -503,13 +502,7 @@ public class RaftNode implements Serializable {
                     this.logEntries.add(entry);
                 }
             }
-            for(LogEntry entry : this.logEntries) {
-                System.out.println(entry);
-            }
-            System.out.println("LAST APPLIED = " + lastCommitted);
-            System.out.println("LEADER COMMIT = " + msg.getLeaderCommit());
         }
-
 
         if(msg.getLeaderCommit() > lastCommitted && logEntries.size() > msg.getLeaderCommit()) {
             this.lastCommitted += 1;
