@@ -66,8 +66,11 @@ public class RaftController implements ApplicationContextAware {
     }
 
     @GetMapping(value = "/log")
-    public List<String> getMessageLogs() {
-        return context.getMessageLogs();
+    public String getLogs() {
+        if (context instanceof ClusteredRaftContext) {
+            return ((ClusteredRaftContext) context).getNode().getLogEntries().toString();
+        }
+        return "";
     }
 
     @PostMapping(value = "/query")

@@ -28,7 +28,7 @@ public class RedisKVService implements StateMachine {
 
     @Override
     public Response<BankAccount> apply(LogEntry entry) {
-        return Response.fail();
+        return null;
     }
 
     @Override
