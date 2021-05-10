@@ -7,16 +7,16 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 
 @RestController
 @Log4j2
+@ConditionalOnExpression("${cervidae.jraft.isRaftNode:false}")
 @RequestMapping("/raft")
 @Api("RaftController")
 public class RaftController implements ApplicationContextAware {
@@ -68,7 +68,8 @@ public class RaftController implements ApplicationContextAware {
     @GetMapping(value = "/log")
     public String getLogs() {
         if (context instanceof ClusteredRaftContext) {
-            return ((ClusteredRaftContext) context).getNode().getLogEntries().toString();
+            return "N" + ((ClusteredRaftContext) context).getNode().getId() + " " +
+                    ((ClusteredRaftContext) context).getNode().getLogEntries().toString();
         }
         return "";
     }
@@ -147,5 +148,10 @@ public class RaftController implements ApplicationContextAware {
         Assert.notNull(node, "node not found?");
         var sm = node.getStateMachine();
         return Response.success(sm.query(key));
+    }
+
+    @GetMapping(value = "/sm/string")
+    public String smGetString(@RequestParam("k") String key) {
+        return Integer.toString((Integer) smGet(key).getPayload());
     }
 }

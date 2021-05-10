@@ -5,11 +5,13 @@ import com.cervidae.jraft.node.ClusteredRaftContext;
 import com.cervidae.jraft.node.RaftContext;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @Log4j2
+@ConditionalOnExpression("${cervidae.jraft.isRaftNode:false}")
 @RequestMapping("/rpc")
 public class RPCController {
 

@@ -73,4 +73,9 @@ public class MonitorController {
     public List<String> check_consensus() {
         return monitorService.broadcastForString("/raft/log");
     }
+
+    @GetMapping(value = "sm_val")
+    public List<String> check_sm_val(@RequestParam("userId") String userId) {
+        return monitorService.broadcastForString("/raft/sm/string?k=" + userId);
+    }
 }

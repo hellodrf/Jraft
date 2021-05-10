@@ -29,5 +29,10 @@
       "name": "cervidae.jraft.monitorUrl",
       "type": "java.lang.String",
       "description": "Description for cervidae.jraft.monitorUrl."
+    },
+    {
+      "name": "cervidae.jraft.isRaftNode",
+      "type": "java.lang.Boolean",
+      "description": "Description for cervidae.jraft.isRaftNode."
     }
   ] }
