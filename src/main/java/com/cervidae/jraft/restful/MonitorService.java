@@ -1,6 +1,6 @@
 package com.cervidae.jraft.restful;
 
-import com.cervidae.jraft.async.AsyncService;
+import com.cervidae.jraft.config.AsyncService;
 import com.cervidae.jraft.node.RaftConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;

@@ -1,4 +1,4 @@
-package com.cervidae.jraft.async;
+package com.cervidae.jraft.config;
 
 /**
  * ArgRunnable: A lambda function that takes exactly one argument, no returns, no exceptions.

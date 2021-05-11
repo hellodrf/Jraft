@@ -1,12 +1,11 @@
 package com.cervidae.jraft.statemachine;
 
-import com.cervidae.jraft.bank.BankAccount;
+import com.cervidae.jraft.restful.BankAccount;
 import com.cervidae.jraft.node.LogEntry;
 import com.cervidae.jraft.restful.Response;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;

@@ -1,4 +1,4 @@
-package com.cervidae.jraft.async;
+package com.cervidae.jraft.config;
 
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.beans.BeansException;

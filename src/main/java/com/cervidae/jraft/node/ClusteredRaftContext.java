@@ -1,6 +1,6 @@
 package com.cervidae.jraft.node;
 
-import com.cervidae.jraft.async.AsyncService;
+import com.cervidae.jraft.config.AsyncService;
 import com.cervidae.jraft.msg.AppendEntriesRequest;
 import com.cervidae.jraft.msg.Message;
 import com.cervidae.jraft.msg.RequestVoteRequest;

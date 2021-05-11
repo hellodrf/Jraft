@@ -68,10 +68,10 @@ public class RaftController implements ApplicationContextAware {
     @GetMapping(value = "/log")
     public String getLogs() {
         if (context instanceof ClusteredRaftContext) {
-            return "N" + ((ClusteredRaftContext) context).getNode().getId() + " " +
+            return "N" + ((ClusteredRaftContext) context).getNode().getId() +
                     ((ClusteredRaftContext) context).getNode().getLogEntries().toString();
         }
-        return "";
+        return "not_supported";
     }
 
     @PostMapping(value = "/query")
@@ -102,7 +102,8 @@ public class RaftController implements ApplicationContextAware {
             log.info("I am not leader, discarding command");
             return Response.fail("not_leader");
         } else {
-            return Response.success(node.newEntry(command));
+            var index = node.newEntry(command);
+            return index == -1 ? Response.fail("Cluster failed?") : Response.success(index);
         }
     }
 

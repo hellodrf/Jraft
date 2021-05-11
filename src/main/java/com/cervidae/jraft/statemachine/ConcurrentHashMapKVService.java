@@ -1,15 +1,13 @@
 package com.cervidae.jraft.statemachine;
 
-import com.cervidae.jraft.bank.BankAccount;
+import com.cervidae.jraft.restful.BankAccount;
 import com.cervidae.jraft.node.LogEntry;
 import com.cervidae.jraft.restful.Response;
 import lombok.Data;
-import lombok.extern.java.Log;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

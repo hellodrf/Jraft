@@ -1,4 +1,4 @@
-package com.cervidae.jraft.async;
+package com.cervidae.jraft.config;
 
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;

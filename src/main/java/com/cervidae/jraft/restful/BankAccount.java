@@ -1,4 +1,4 @@
-package com.cervidae.jraft.bank;
+package com.cervidae.jraft.restful;
 
 public class BankAccount {
     String accountID;
